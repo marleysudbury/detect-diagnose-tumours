@@ -1,7 +1,8 @@
 # Program to take input .svs or .tif and give classification
 # according to pretrained model
 
-# (c) Marley Sudbury aka 1838838
+# Written my Marley Sudbury (1838838)
+# for CM3203 One Semester Individual Project
 
 # Instructions for use
 # (1) to classify a single .tif or .svs image,

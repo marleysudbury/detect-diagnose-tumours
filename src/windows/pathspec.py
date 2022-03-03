@@ -1,3 +1,9 @@
+# Demonstration of how folders and files are accessed
+# Important for command line parameter passing
+
+# Written my Marley Sudbury (1838838)
+# for CM3203 One Semester Individual Project
+
 import os
 import sys
 import pathlib
