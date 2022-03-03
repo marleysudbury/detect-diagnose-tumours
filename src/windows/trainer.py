@@ -22,8 +22,8 @@ image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
 
 batch_size = 2
-img_height = 500
-img_width = 500
+img_height = 1000
+img_width = 1000
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
   data_dir,
@@ -54,8 +54,6 @@ AUTOTUNE = tf.data.AUTOTUNE
 train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-IMG_SIZE = 500
-
 normalization_layer = layers.Rescaling(1./255)
 
 normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
@@ -77,15 +75,16 @@ data_augmentation = keras.Sequential(
   ]
 )
 
+# TODO: try different kernel size, e.g. 10 (orig 3)
 model = Sequential([
   data_augmentation,
-  layers.Resizing(IMG_SIZE, IMG_SIZE),
+  layers.Resizing(img_height, img_width),
   layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.Conv2D(16, 10, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Conv2D(32, 3, padding='same', activation='relu'),
+  layers.Conv2D(32, 10, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
+  layers.Conv2D(64, 10, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Dropout(0.2),
   layers.Flatten(),
@@ -97,21 +96,22 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.build((None, 500, 500, 3))
+model.build((None, img_height, img_width, 3))
 
 model.summary()
 
+# Save the model so that it can be loaded later
+# Adapted from https://www.tensorflow.org/tutorials/keras/save_and_load
+
 checkpoint_path = "training_1/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
-
-# Adapted from https://www.tensorflow.org/tutorials/keras/save_and_load
 
 # Create a callback that saves the model's weights
 cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
 
-epochs=20
+epochs=40
 history = model.fit(
   train_ds,
   validation_data=val_ds,

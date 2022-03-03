@@ -89,12 +89,10 @@ def main():
     # function in another file.
 
     batch_size = 32
-    img_height = 500
-    img_width = 500
+    img_height = 1000
+    img_width = 1000
 
     AUTOTUNE = tf.data.AUTOTUNE
-
-    IMG_SIZE = 500
 
     normalization_layer = layers.Rescaling(1./255)
 
@@ -115,7 +113,7 @@ def main():
     global model
     model = Sequential([
       data_augmentation,
-      layers.Resizing(IMG_SIZE, IMG_SIZE),
+      layers.Resizing(img_height, img_width),
       layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
       layers.Conv2D(16, 3, padding='same', activation='relu'),
       layers.MaxPooling2D(),
@@ -133,7 +131,7 @@ def main():
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    model.build((None, 500, 500, 3))
+    model.build((None, img_height, img_width, 3))
 
     checkpoint_path = "training_1/cp.ckpt"
     model.load_weights(checkpoint_path)

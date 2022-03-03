@@ -5,8 +5,6 @@
 # Written my Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
-# Adapted from https://stackoverflow.com/questions/62629946/python-converting-images-in-tif-format-to-png
-
 import os
 
 # These files are required, they can be downloaded at:
@@ -20,6 +18,7 @@ os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
 
 import pyvips
 
+# Adapted from https://stackoverflow.com/questions/62629946/python-converting-images-in-tif-format-to-png
 # Take images from this directory
 yourpath = os.path.dirname("E:\\Data\\Negative\\")
 # Save the images to this directory
