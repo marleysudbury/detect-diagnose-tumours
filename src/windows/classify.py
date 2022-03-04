@@ -24,7 +24,7 @@ import sys
 # This is required for the pyvips library
 # change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
+vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 
 # set PATH
 os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
@@ -59,7 +59,7 @@ def classify_image(path, index):
         shape=[img.height, img.width, img.bands]
     )
 
-    img_array = tf.image.resize(img_array, [500, 500])
+    img_array = tf.image.resize(img_array, [img_height, img_width])
     img_array = tf.expand_dims(img_array, 0) # Create a batch
 
     predictions = model.predict(img_array)
@@ -89,6 +89,8 @@ def main():
     # function in another file.
 
     batch_size = 32
+    global img_height
+    global img_width
     img_height = 1000
     img_width = 1000
 
@@ -115,11 +117,11 @@ def main():
       data_augmentation,
       layers.Resizing(img_height, img_width),
       layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-      layers.Conv2D(16, 3, padding='same', activation='relu'),
+      layers.Conv2D(16, 10, padding='same', activation='relu'),
       layers.MaxPooling2D(),
-      layers.Conv2D(32, 3, padding='same', activation='relu'),
+      layers.Conv2D(32, 10, padding='same', activation='relu'),
       layers.MaxPooling2D(),
-      layers.Conv2D(64, 3, padding='same', activation='relu'),
+      layers.Conv2D(64, 10, padding='same', activation='relu'),
       layers.MaxPooling2D(),
       layers.Dropout(0.2),
       layers.Flatten(),

@@ -5,10 +5,10 @@
 
 # Adapted from https://www.tensorflow.org/tutorials/images/classification
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import os
-import PIL
+# import PIL
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -16,12 +16,12 @@ from tensorflow.keras.models import Sequential
 
 import pathlib
 
-data_dir = pathlib.Path('D:\\Training Data !\\Adam compressed')
+data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
 
 image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
 
-batch_size = 2
+batch_size = 5
 img_height = 1000
 img_width = 1000
 
@@ -89,10 +89,13 @@ model = Sequential([
   layers.Dropout(0.2),
   layers.Flatten(),
   layers.Dense(128, activation='relu'),
-  layers.Dense(num_classes)
+  layers.Dense(num_classes, activation='relu')
 ])
 
-model.compile(optimizer='adam',
+from tensorflow.keras.optimizers import SGD
+opt = SGD(lr=0.0001)
+
+model.compile(optimizer=opt,
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
@@ -111,7 +114,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
 
-epochs=40
+epochs=20
 history = model.fit(
   train_ds,
   validation_data=val_ds,

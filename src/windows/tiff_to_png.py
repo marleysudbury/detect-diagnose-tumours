@@ -11,7 +11,7 @@ import os
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
+vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 
 # Include it in path PATH
 os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
