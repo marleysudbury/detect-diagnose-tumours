@@ -7,14 +7,22 @@
 
 # import matplotlib.pyplot as plt
 import numpy as np
+import sys
 import os
 # import PIL
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-
 import pathlib
+
+# Import my own modules
+
+from path_handler import PathHandler
+from image_pipeline import ImagePipeline
+
+path = PathHandler(sys.argv[1])
+pipeline = ImagePipeline()
 
 # data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
 data_dir = pathlib.Path('media/c1838838/REM3/Training Data!/Adam compressed')
@@ -22,9 +30,9 @@ data_dir = pathlib.Path('media/c1838838/REM3/Training Data!/Adam compressed')
 image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
 
-batch_size = 5
-img_height = 1000
-img_width = 1000
+batch_size = 32
+img_height = 300
+img_width = 300
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
   data_dir,
@@ -71,8 +79,8 @@ data_augmentation = keras.Sequential(
                       input_shape=(img_height,
                                   img_width,
                                   3)),
-    layers.RandomRotation(1),
-    layers.RandomZoom(1),
+    layers.RandomRotation(factor(-1, 1)),
+    layers.RandomZoom(height_factor(-1,1)),
   ]
 )
 
@@ -81,22 +89,22 @@ model = Sequential([
   data_augmentation,
   layers.Resizing(img_height, img_width),
   layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-  layers.Conv2D(16, 10, padding='same', activation='relu'),
+  layers.Conv2D(16, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Conv2D(32, 10, padding='same', activation='relu'),
+  layers.Conv2D(32, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Conv2D(64, 10, padding='same', activation='relu'),
+  layers.Conv2D(64, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Dropout(0.2),
   layers.Flatten(),
   layers.Dense(128, activation='relu'),
-  layers.Dense(num_classes, activation='relu')
+  layers.Dense(num_classes)
 ])
 
 from tensorflow.keras.optimizers import SGD
 opt = SGD(lr=0.0001)
 
-model.compile(optimizer=opt,
+model.compile(optimizer='Adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
