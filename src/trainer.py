@@ -16,7 +16,8 @@ from tensorflow.keras.models import Sequential
 
 import pathlib
 
-data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
+# data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
+data_dir = pathlib.Path('media/c1838838/REM3/Training Data!/Adam compressed')
 
 image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
