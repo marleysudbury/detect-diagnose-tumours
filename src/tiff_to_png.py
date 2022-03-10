@@ -13,8 +13,8 @@ import math
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
-# openslidehome = 'C:\\Users\\Marley\\Downloads\\openslide-win64-20171122\\bin'
+# vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
 
 # Include it in path PATH
 os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
@@ -25,9 +25,9 @@ import pyvips
 
 # Adapted from https://stackoverflow.com/questions/62629946/python-converting-images-in-tif-format-to-png
 # Take images from this directory
-yourpath = os.path.dirname("G:\\Data\\Negative\\")
+yourpath = os.path.dirname("E:\\Data\\Negative\\")
 # Save the images to this directory
-destination = os.path.dirname("E:\\Training Data !\\Adam compressed\\Negative\\")
+destination = os.path.dirname("D:\\Training Data !\\Adam compressed\\Negative\\")
 
 def squarify(M,val):
     # Adapted from https://stackoverflow.com/a/45989739
@@ -38,7 +38,6 @@ def squarify(M,val):
     else:
         amount = math.floor((b-a)/2)
         padding=((amount,amount),(0,0),(0,0))
-    print("About to pad")
     return np.pad(M,padding,mode='constant',constant_values=val)
 
 for root, dirs, files in os.walk(yourpath, topdown=False):
@@ -86,14 +85,12 @@ for root, dirs, files in os.walk(yourpath, topdown=False):
                         dtype=format_to_dtype[image.format],
                         shape=[image.height, image.width, image.bands]
                     )
-                    print("BEFORE SQUARE")
                     new_array = squarify(img_array, 255)
-                    print("AFTER SQUARE")
                     height, width, bands = new_array.shape
                     linear = new_array.reshape(width * height * bands)
                     image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
                                                     dtype_to_format[str(new_array.dtype)])
-                    image = image.thumbnail_image(100, height=100, crop=True)
+                    image = image.thumbnail_image(1000, height=1000, crop=True)
                     image.write_to_file(outfile)
                 except Exception as e:
                     print ("ERROR:",e)
