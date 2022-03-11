@@ -26,10 +26,11 @@ import math
 # change this for your install location and vips version, and remember to
 # use double backslashes
 # vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
-vipshome = '/home/c1838838/Downloads/libvips'
+# vipshome = '/home/c1838838/Downloads/libvips'
+vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
 
 # set PATH
-# os.environ['PATH'] = vipshome + ':' + os.environ['PATH']
+os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
 
 import pyvips
 
@@ -105,9 +106,9 @@ def main():
     batch_size = 32
     global img_height
     global img_width
-    
-    img_height = 100
-    img_width = 100
+
+    img_height = 1000
+    img_width = 1000
 
     AUTOTUNE = tf.data.AUTOTUNE
 
@@ -115,34 +116,10 @@ def main():
 
     num_classes = 2
 
-    data_augmentation = keras.Sequential(
-      [
-        layers.RandomFlip("horizontal",
-                          input_shape=(img_height,
-                                      img_width,
-                                      3)),
-        layers.RandomRotation(0.1),
-        layers.RandomZoom(0.1),
-      ]
-    )
-
     # Create a basic model instance
     global model
-    model = Sequential([
-      data_augmentation,
-      layers.Resizing(img_height, img_width),
-      layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-      layers.Conv2D(16, 3, padding='same', activation='relu'),
-      layers.MaxPooling2D(),
-      layers.Conv2D(32, 3, padding='same', activation='relu'),
-      layers.MaxPooling2D(),
-      layers.Conv2D(64, 3, padding='same', activation='relu'),
-      layers.MaxPooling2D(),
-      layers.Dropout(0.2),
-      layers.Flatten(),
-      layers.Dense(128, activation='relu'),
-      layers.Dense(num_classes)
-    ])
+    from second_model import MakeModel
+    model = MakeModel(img_height, img_width, num_classes)
 
     model.compile(optimizer='Adam',
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -150,7 +127,7 @@ def main():
 
     model.build((None, img_height, img_width, 3))
 
-    checkpoint_path = "E:/model_adam_1000/cp.ckpt"
+    checkpoint_path = "D:/model_2_adam_1000/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
