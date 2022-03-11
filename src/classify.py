@@ -25,10 +25,11 @@ import math
 # This is required for the pyvips library
 # change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+# vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+vipshome = '/home/c1838838/Downloads/libvips'
 
 # set PATH
-os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
+# os.environ['PATH'] = vipshome + ':' + os.environ['PATH']
 
 import pyvips
 
@@ -104,6 +105,7 @@ def main():
     batch_size = 32
     global img_height
     global img_width
+    
     img_height = 100
     img_width = 100
 
