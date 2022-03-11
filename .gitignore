@@ -1,6 +1,9 @@
 # Stupid Mac file
 .DS_Store
 
+# Checkpoint
+training_1/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

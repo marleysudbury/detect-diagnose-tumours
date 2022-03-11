@@ -7,13 +7,13 @@
 
 # import matplotlib.pyplot as plt
 import numpy as np
+import sys
 import os
 # import PIL
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-
 import pathlib
 batch_size = 6
 img_height = 1000
@@ -32,13 +32,19 @@ data_augmentation = keras.Sequential(
 
 from second_model import MakeModel
 
+# Import my own modules
+
+from path_handler import PathHandler
+from image_pipeline import ImagePipeline
+
+path = PathHandler(sys.argv[1])
+pipeline = ImagePipeline()
+
 # data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
 data_dir = pathlib.Path('/media/c1838838/REM3/Training Data !/Adam compressed')
 
 image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
-
-
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
   data_dir,
