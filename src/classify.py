@@ -20,16 +20,28 @@ from tensorflow.keras.models import Sequential
 import pathlib
 import numpy as np
 import sys
+import math
 
 # This is required for the pyvips library
 # change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
+vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 
 # set PATH
 os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
 
 import pyvips
+
+def squarify(M,val):
+    # Adapted from https://stackoverflow.com/a/45989739
+    (a,b,c)=M.shape
+    if a>b:
+        amount = math.floor((a-b)/2)
+        padding=((0,0),(amount,amount),(0,0))
+    else:
+        amount = math.floor((b-a)/2)
+        padding=((amount,amount),(0,0),(0,0))
+    return np.pad(M,padding,mode='constant',constant_values=val)
 
 def classify_image(path, index):
     # Takes an image and prints the classification and confidence
@@ -60,6 +72,7 @@ def classify_image(path, index):
     )
 
     img_array = tf.image.resize(img_array, [img_height, img_width])
+    img_array = squarify(img_array, 0)
     img_array = tf.expand_dims(img_array, 0) # Create a batch
 
     predictions = model.predict(img_array)
@@ -91,8 +104,8 @@ def main():
     batch_size = 32
     global img_height
     global img_width
-    img_height = 300
-    img_width = 300
+    img_height = 100
+    img_width = 100
 
     AUTOTUNE = tf.data.AUTOTUNE
 
@@ -129,13 +142,13 @@ def main():
       layers.Dense(num_classes)
     ])
 
-    model.compile(optimizer='adam',
+    model.compile(optimizer='Adam',
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
     model.build((None, img_height, img_width, 3))
 
-    checkpoint_path = "D:/training_1/cp.ckpt"
+    checkpoint_path = "E:/model_adam_1000/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
