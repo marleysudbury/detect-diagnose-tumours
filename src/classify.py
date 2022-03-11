@@ -24,10 +24,11 @@ import sys
 # This is required for the pyvips library
 # change this for your install location and vips version, and remember to
 # use double backslashes
-vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+# vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+vipshome = '/home/c1838838/Downloads/libvips'
 
 # set PATH
-os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
+# os.environ['PATH'] = vipshome + ':' + os.environ['PATH']
 
 import pyvips
 
@@ -91,8 +92,8 @@ def main():
     batch_size = 32
     global img_height
     global img_width
-    img_height = 1000
-    img_width = 1000
+    img_height = 300
+    img_width = 300
 
     AUTOTUNE = tf.data.AUTOTUNE
 
@@ -117,11 +118,11 @@ def main():
       data_augmentation,
       layers.Resizing(img_height, img_width),
       layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-      layers.Conv2D(16, 10, padding='same', activation='relu'),
+      layers.Conv2D(16, 3, padding='same', activation='relu'),
       layers.MaxPooling2D(),
-      layers.Conv2D(32, 10, padding='same', activation='relu'),
+      layers.Conv2D(32, 3, padding='same', activation='relu'),
       layers.MaxPooling2D(),
-      layers.Conv2D(64, 10, padding='same', activation='relu'),
+      layers.Conv2D(64, 3, padding='same', activation='relu'),
       layers.MaxPooling2D(),
       layers.Dropout(0.2),
       layers.Flatten(),
@@ -135,7 +136,7 @@ def main():
 
     model.build((None, img_height, img_width, 3))
 
-    checkpoint_path = "training_1/cp.ckpt"
+    checkpoint_path = "/media/c1838838/REM3/training_1/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
