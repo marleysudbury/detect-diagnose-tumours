@@ -42,8 +42,16 @@ for pair in json_coords[0]:
     temp = pair[0]
     pair[0] = pair[1]
     pair[1] = temp
-    
-json_colour = [(25, 200, 60)]
+
+color_int = json_data['features'][0]['properties']['classification']['colorRGB']
+color_bytes = color_int.to_bytes(4, byteorder='big', signed=True)
+r = color_bytes[1]
+g = color_bytes[2]
+b = color_bytes[3]
+
+json_colour = [(r, g, b)]
+
+# json_colour = [(25, 200, 60)]
 
 writer.add_contours(json_coords, json_colour)
 

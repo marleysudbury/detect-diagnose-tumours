@@ -866,7 +866,7 @@
     </Regions>
     <Plots/>
   </Annotation>
-  <Annotation Id="2" Name="" ReadOnly="0" NameReadOnly="0" LineColorReadOnly="0" Incremental="0" Type="4" LineColor="3983385" Visible="1" Selected="0" MarkupImagePath="" MacroName="">
+  <Annotation Id="2" Name="" ReadOnly="0" NameReadOnly="0" LineColorReadOnly="0" Incremental="0" Type="4" LineColor="200" Visible="1" Selected="0" MarkupImagePath="" MacroName="">
     <Attributes>
       <Attribute Name="" Id="0" Value=""/>
     </Attributes>

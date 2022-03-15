@@ -34,6 +34,12 @@ os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
 
 import pyvips
 
+# For Grad-CAM visualisation
+from IPython.display import Image, display
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+
 def squarify(M,val):
     # Adapted from https://stackoverflow.com/a/45989739
     (a,b,c)=M.shape
