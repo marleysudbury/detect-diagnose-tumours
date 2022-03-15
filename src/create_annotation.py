@@ -45,6 +45,9 @@ for pair in json_coords[0]:
 
 color_int = json_data['features'][0]['properties']['classification']['colorRGB']
 color_bytes = color_int.to_bytes(4, byteorder='big', signed=True)
+# Alpha doesn't work because Python insists on signed=True
+# which would give a negative value as the int is stored
+# with two's complement
 r = color_bytes[1]
 g = color_bytes[2]
 b = color_bytes[3]

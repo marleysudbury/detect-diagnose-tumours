@@ -27,7 +27,7 @@ import math
 # use double backslashes
 # vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 # vipshome = '/home/c1838838/Downloads/libvips'
-vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
+vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 
 # set PATH
 os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
@@ -35,9 +35,58 @@ os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
 import pyvips
 
 # For Grad-CAM visualisation
+# https://keras.io/examples/vision/grad_cam/
 from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import cv2
+
+def get_img_array(img_path, size):
+    # https://keras.io/examples/vision/grad_cam/
+    # `img` is a PIL image of size 299x299
+    img = keras.preprocessing.image.load_img(img_path, target_size=size)
+    # `array` is a float32 Numpy array of shape (299, 299, 3)
+    array = keras.preprocessing.image.img_to_array(img)
+    # We add a dimension to transform our array into a "batch"
+    # of size (1, 299, 299, 3)
+    array = np.expand_dims(array, axis=0)
+    return array
+
+
+def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
+    # https://keras.io/examples/vision/grad_cam/
+    # First, we create a model that maps the input image to the activations
+    # of the last conv layer as well as the output predictions
+    grad_model = tf.keras.models.Model(
+        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+    )
+
+    # Then, we compute the gradient of the top predicted class for our input image
+    # with respect to the activations of the last conv layer
+    with tf.GradientTape() as tape:
+        last_conv_layer_output, preds = grad_model(img_array)
+        if pred_index is None:
+            pred_index = tf.argmax(preds[0])
+        class_channel = preds[:, pred_index]
+
+    # This is the gradient of the output neuron (top predicted or chosen)
+    # with regard to the output feature map of the last conv layer
+    grads = tape.gradient(class_channel, last_conv_layer_output)
+
+    # This is a vector where each entry is the mean intensity of the gradient
+    # over a specific feature map channel
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+
+    # We multiply each channel in the feature map array
+    # by "how important this channel is" with regard to the top predicted class
+    # then sum all the channels to obtain the heatmap class activation
+    last_conv_layer_output = last_conv_layer_output[0]
+    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
+    heatmap = tf.squeeze(heatmap)
+
+    # For visualization purpose, we will also normalize the heatmap between 0 & 1
+    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    return heatmap.numpy()
 
 
 def squarify(M,val):
@@ -71,25 +120,90 @@ def classify_image(path, index):
 
     class_names = ['Negative', 'Positive']
 
-    # img = pyvips.Image.tiffload(os.path.join(root, name), page=5)
-    img = pyvips.Image.tiffload(path, page=index)
-    img_array = np.ndarray(
-        buffer=img.write_to_memory(),
-        dtype=format_to_dtype[img.format],
-        shape=[img.height, img.width, img.bands]
-    )
+    try:
+        # img = pyvips.Image.tiffload(os.path.join(root, name), page=5)
+        img = pyvips.Image.tiffload(path, page=index)
+        img_array = np.ndarray(
+            buffer=img.write_to_memory(),
+            dtype=format_to_dtype[img.format],
+            shape=[img.height, img.width, img.bands]
+        )
+        img_array = cv2.resize(img_array, dsize=(img_height, img_width), interpolation=cv2.INTER_CUBIC)
+        img_array = squarify(img_array, 255)
+        # img_array = tf.image.resize(img_array, [img_height, img_width])
 
-    img_array = tf.image.resize(img_array, [img_height, img_width])
-    img_array = squarify(img_array, 0)
-    img_array = tf.expand_dims(img_array, 0) # Create a batch
 
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
+        img_array = tf.expand_dims(img_array, 0) # Create a batch
+        # plt.imshow(img_array)
+        # plt.show()
+        predictions = model.predict(img_array)
+        score = tf.nn.softmax(predictions[0])
 
-    print(
-        "This image most likely belongs to {} with a {:.2f} percent confidence."
-        .format(class_names[np.argmax(score)], 100 * np.max(score))
-    )
+        print(
+            "This image most likely belongs to {} with a {:.2f} percent confidence."
+            .format(class_names[np.argmax(score)], 100 * np.max(score))
+        )
+        # return
+
+        model_builder = keras.applications.xception.Xception
+        img_size = (img_height, img_width)
+        preprocess_input = keras.applications.xception.preprocess_input
+        decode_predictions = keras.applications.xception.decode_predictions
+
+        last_conv_layer_name = "conv2d_2"
+
+        # Prepare image
+        # img_array = preprocess_input(get_img_array(img_path, size=img_size))
+
+        # Make model
+        # model = model_builder(weights="imagenet")
+
+        # Remove last layer's softmax
+        model.layers[-1].activation = None
+
+        # Print what the top predicted class is
+        # preds = model.predict(img_array)
+        # print("Predicted:", decode_predictions(preds, top=1)[0])
+
+        # Generate class activation heatmap
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        # Rescale heatmap to a range 0-255
+        heatmap = np.uint8(255 * heatmap)
+
+        # Use jet colormap to colorize heatmap
+        jet = cm.get_cmap("jet")
+
+        # Use RGB values of the colormap
+        jet_colors = jet(np.arange(256))[:, :3]
+        jet_heatmap = jet_colors[heatmap]
+
+        img = img_array[0]
+
+        # Create an image with RGB colorized heatmap
+        jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
+        jet_heatmap = jet_heatmap.resize((img.shape[0], img.shape[1]))
+        jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
+
+        # Superimpose the heatmap on original image
+        superimposed_img = jet_heatmap * 0.4 + img
+        superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
+
+        # Save the superimposed image
+        # superimposed_img.save(cam_path)
+
+        # Display Grad CAM
+        # display(Image(cam_path))
+
+
+        # imposed = heatmap * 0.4 + img_array
+
+        # Display heatmap
+        plt.matshow(jet_heatmap)
+        plt.show()
+    except Exception as err:
+        print("An error occured while classifying the image")
+        print("{}: {}".format(type(err).__name__, err))
 
 def classify_directory(path):
     # yourpath = os.path.dirname("D:\\Training Data !\\Cam16\\Training\\Normal\\")
@@ -99,7 +213,7 @@ def classify_directory(path):
             print(name)
             if name[-3:] in ['tif', 'svs']:
                 # img = pyvips.Image.tiffload(os.path.join(root, name), page=5)
-                classify_image(os.path.join(root, name), 5)
+                classify_image(os.path.join(root, name), 2)
 
 def main():
     # Step 1. load the model that has been trained from a checkpoint file
@@ -113,8 +227,8 @@ def main():
     global img_height
     global img_width
 
-    img_height = 1000
-    img_width = 1000
+    img_height = 100
+    img_width = 100
 
     AUTOTUNE = tf.data.AUTOTUNE
 
@@ -124,7 +238,7 @@ def main():
 
     # Create a basic model instance
     global model
-    from second_model import MakeModel
+    from models.first_model import MakeModel
     model = MakeModel(img_height, img_width, num_classes)
 
     model.compile(optimizer='Adam',
@@ -133,7 +247,9 @@ def main():
 
     model.build((None, img_height, img_width, 3))
 
-    checkpoint_path = "D:/model_2_adam_1000/cp.ckpt"
+    model.summary()
+
+    checkpoint_path = "E:/model_adam_100/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -165,7 +281,9 @@ def main():
         print("file")
         dir = interpreted_path[0]
         file = interpreted_path[1]
-        classify_image(os.path.join(dir, file), 5)
+        classify_image(os.path.join(dir, file), 2)
+
+
     # if os.path.isdir(interpreted_path[0]):
     #     # The head of the provided path is a folder
     #     # This will only be the case if the specified image or
