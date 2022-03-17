@@ -15,7 +15,7 @@ from path_handler import PathHandler
 vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
 
 # Include it in path PATH
-os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
+os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
 
 import pyvips
 
