@@ -6,6 +6,9 @@
 # Adapted from https://www.tensorflow.org/tutorials/images/classification
 
 # import matplotlib.pyplot as plt
+from utils.image_pipeline import ImagePipeline
+from utils.path_handler import PathHandler
+from models.second_model import MakeModel
 import numpy as np
 import sys
 import os
@@ -20,22 +23,19 @@ img_height = 1000
 img_width = 1000
 
 data_augmentation = keras.Sequential(
-  [
-    layers.RandomFlip("horizontal",
-                      input_shape=(img_height,
-                                  img_width,
-                                  3)),
-    layers.RandomRotation(factor=(-1, 1)),
-    layers.RandomZoom(height_factor=(-1, 1)),
-  ]
+    [
+        layers.RandomFlip("horizontal",
+                          input_shape=(img_height,
+                                       img_width,
+                                       3)),
+        layers.RandomRotation(factor=(-1, 1)),
+        layers.RandomZoom(height_factor=(-1, 1)),
+    ]
 )
 
-from second_model import MakeModel
 
 # Import my own modules
 
-from path_handler import PathHandler
-from image_pipeline import ImagePipeline
 
 path = PathHandler(sys.argv[1])
 pipeline = ImagePipeline()
@@ -47,20 +47,20 @@ image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="training",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
+    data_dir,
+    validation_split=0.2,
+    subset="training",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size)
 
 val_ds = tf.keras.utils.image_dataset_from_directory(
-  data_dir,
-  validation_split=0.2,
-  subset="validation",
-  seed=123,
-  image_size=(img_height, img_width),
-  batch_size=batch_size)
+    data_dir,
+    validation_split=0.2,
+    subset="validation",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size)
 
 class_names = train_ds.class_names
 
@@ -81,7 +81,8 @@ num_classes = len(class_names)
 model = MakeModel(img_height, img_width, num_classes)
 
 model.compile(optimizer='Adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(
+                  from_logits=True),
               metrics=['accuracy'])
 
 model.build((None, img_height, img_width, 3))
@@ -99,10 +100,10 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
 
-epochs=100
+epochs = 100
 history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs,
-  callbacks=[cp_callback]
+    train_ds,
+    validation_data=val_ds,
+    epochs=epochs,
+    callbacks=[cp_callback]
 )
