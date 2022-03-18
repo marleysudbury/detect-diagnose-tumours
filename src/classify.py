@@ -22,16 +22,15 @@ import numpy as np
 import sys
 import math
 
-# This is required for the pyvips library
-# change this for your install location and vips version, and remember to
+# These files are required, they can be downloaded at:
+# https://github.com/libvips/libvips/releases
+# Change this for your install location and vips version, and remember to
 # use double backslashes
-# vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
-# vipshome = '/home/c1838838/Downloads/libvips'
-vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
+from utils.load_config import config
+vipshome = config['libvips_path']
 
-# set PATH
-os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
-
+# Include it in path PATH
+os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
 import pyvips
 
 # For Grad-CAM visualisation

@@ -13,15 +13,12 @@ import math
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
 # use double backslashes
-# vipshome = 'C:\\Users\\Marley\\Downloads\\vips-dev-8.12\\bin'
-vipshome = 'C:\\Users\\c1838838\\Downloads\\vips-dev-8.12\\bin'
+from utils.load_config import config
+vipshome = config['libvips_path']
 
 # Include it in path PATH
-os.environ['PATH'] = vipshome + ';' + os.environ['PATH']
-# os.environ['PATH'] = openslidehome + ';' + os.environ['PATH']
-
+os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
 import pyvips
-# import openslide
 
 # Adapted from https://stackoverflow.com/questions/62629946/python-converting-images-in-tif-format-to-png
 # Take images from this directory
