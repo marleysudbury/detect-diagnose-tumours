@@ -9,42 +9,46 @@ import sys
 
 
 class PathHandler:
-    def PathHandler(provided_path):
+    def PathHandler(self, provided_path):
         interpreted_path = os.path.split(provided_path)
-        dir = None
-        file = None
-        print(os.path.join(interpreted_path[0], interpreted_path[1]))
-        if os.path.isdir(os.path.join(interpreted_path[0], interpreted_path[1], '\\')):
+        self.dir = None
+        self.file_name = None
+        potential_path = os.path.join(
+            interpreted_path[0],
+            interpreted_path[1],
+            # '\\'
+        )
+
+        if os.path.isdir(potential_path):
             # The tail of the provided path is a folder
             # This will only be the case if all files are being
             # classified within the folder
-            print("dir")
-            dir = os.path.join(interpreted_path[0], interpreted_path[1])
-            yourpath = dir
-            print(dir)
-            for root, dirs, files in os.walk(os.path.join(yourpath), topdown=False):
-                for name in files:
-                    print(name)
+            self.dir = potential_path
 
-        if os.path.isfile(os.path.join(interpreted_path[0], interpreted_path[1])):
+        if os.path.isfile(potential_path):
             # The tail of the provided path is a file
             # This will only be the case if a specific filed
             # is being classified
-            print("file")
-            dir = interpreted_path[0]
-            file = interpreted_path[1]
+            self.dir = interpreted_path[0]
+            self.file_name = interpreted_path[1]
 
-        if dir == file == None:
+        if self.dir == self.file_name == None:
             # The provided path is neither a file nor a folder
-            print("not valid")
+            print("Provided path is not valid")
 
-    def file():
+    def file(self):
         # Return true if current path specifies file
-        pass
+        if self.file is not None:
+            return True
+        else:
+            return False
 
-    def folder():
+    def folder(self):
         # Return true if current path specifies folder
-        pass
+        if self.file_name is None and self.dir is not None:
+            return True
+        else:
+            return False
 
     def interate_files():
         # Iterate over all the files in the folder
