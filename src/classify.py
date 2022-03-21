@@ -22,6 +22,7 @@ import numpy as np
 import sys
 import math
 from util.path_handler import PathHandler
+from util.image_pipeline import ImagePipeline
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
@@ -90,54 +91,22 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
     return heatmap.numpy()
 
-
-def squarify(M,val):
-    # Adapted from https://stackoverflow.com/a/45989739
-    (a,b,c)=M.shape
-    if a>b:
-        amount = math.floor((a-b)/2)
-        padding=((0,0),(amount,amount),(0,0))
-    else:
-        amount = math.floor((b-a)/2)
-        padding=((amount,amount),(0,0),(0,0))
-    return np.pad(M,padding,mode='constant',constant_values=val)
-
-def classify_image(path, index):
+def classify_image(pipeline, index):
     # Takes an image and prints the classification and confidence
-
-    # Adapted from https://libvips.github.io/pyvips/intro.html#numpy-and-pil
-
-    format_to_dtype = {
-        'uchar': np.uint8,
-        'char': np.int8,
-        'ushort': np.uint16,
-        'short': np.int16,
-        'uint': np.uint32,
-        'int': np.int32,
-        'float': np.float32,
-        'double': np.float64,
-        'complex': np.complex64,
-        'dpcomplex': np.complex128,
-    }
-
-    class_names = ['Negative', 'Positive']
-
     try:
-        # img = pyvips.Image.tiffload(os.path.join(root, name), page=5)
-        img = pyvips.Image.tiffload(path, page=index)
-        img_array = np.ndarray(
-            buffer=img.write_to_memory(),
-            dtype=format_to_dtype[img.format],
-            shape=[img.height, img.width, img.bands]
-        )
-        img_array = cv2.resize(img_array, dsize=(img_height, img_width), interpolation=cv2.INTER_CUBIC)
-        img_array = squarify(img_array, 255)
+        # img = pyvips.Image.tiffload(path, page=index)
+        # img_array = np.ndarray(
+        #     buffer=img.write_to_memory(),
+        #     dtype=format_to_dtype[img.format],
+        #     shape=[img.height, img.width, img.bands]
+        # )
+        # img_array = cv2.resize(img_array, dsize=(img_height, img_width), interpolation=cv2.INTER_CUBIC)
+        # img_array = squarify(img_array, 255)
         # img_array = tf.image.resize(img_array, [img_height, img_width])
 
-
+        img_array = pipeline.convert_image(index, img_height, img_width, True)
         img_array = tf.expand_dims(img_array, 0) # Create a batch
-        # plt.imshow(img_array)
-        # plt.show()
+        class_names = ['Negative', 'Positive']
         predictions = model.predict(img_array)
         score = tf.nn.softmax(predictions[0])
 
@@ -207,9 +176,10 @@ def classify_image(path, index):
         print("An error occured while classifying the image")
         print("{}: {}".format(type(err).__name__, err))
 
-def classify_directory(path):
+def classify_directory(pipeline, path):
     for file in path.iterate_files():
-        classify_image(file, image_index)
+        pipeline.new_path(file)
+        classify_image(pipeline, image_index)
 
 def main():
     # Step 1. load the model that has been trained from a checkpoint file
@@ -258,6 +228,8 @@ def main():
     provided_path = sys.argv[1]
     path = PathHandler(provided_path)
 
+    pipeline = ImagePipeline()
+
     # interpreted_path = os.path.split(provided_path)
     # print(interpreted_path)
     # dir = None
@@ -270,7 +242,7 @@ def main():
         # classified within the folder
         # print("dir")
         # dir = os.path.join(interpreted_path[0], interpreted_path[1])
-        classify_directory(path)
+        classify_directory(pipeline, path)
     # if os.path.isfile(os.path.join(interpreted_path[0],interpreted_path[1])):
     elif path.file():
         # The tail of the provided path is a file
@@ -279,7 +251,8 @@ def main():
         # print("file")
         # dir = interpreted_path[0]
         # file = interpreted_path[1]
-        classify_image(os.path.join(path.dir, path.file), image_index)
+        pipeline.new_path(os.path.join(path.dir, path.file))
+        classify_image(pipeline, image_index)
 
 
     # if os.path.isdir(interpreted_path[0]):
