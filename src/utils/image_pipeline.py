@@ -5,6 +5,7 @@
 # Written my Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
+import pyvips
 import os
 from utils.path_handler import PathHandler
 
@@ -18,7 +19,6 @@ vipshome = config['libvips_path']
 
 # Include it in path PATH
 os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
-import pyvips
 
 
 class ImagePipeline:
@@ -32,12 +32,17 @@ class ImagePipeline:
         path = PathHandler()
 
     def normalise_image():
+        # Apply stain normalisation and
+        # normalise the size of the images
         pass
 
     def convert_image():
         pass
 
     def convert_batch():
+        # Shouldn't be required
+        # Instead, iterate_files() in path_handler
+        # and convert_image() on each
         pass
 
 
