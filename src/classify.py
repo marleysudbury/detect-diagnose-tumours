@@ -21,6 +21,7 @@ import pathlib
 import numpy as np
 import sys
 import math
+from util.path_handler import PathHandler
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
@@ -39,6 +40,8 @@ from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import cv2
+
+image_index = 2
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -205,14 +208,8 @@ def classify_image(path, index):
         print("{}: {}".format(type(err).__name__, err))
 
 def classify_directory(path):
-    # yourpath = os.path.dirname("D:\\Training Data !\\Cam16\\Training\\Normal\\")
-    yourpath = path
-    for root, dirs, files in os.walk(yourpath, topdown=False):
-        for name in files:
-            print(name)
-            if name[-3:] in ['tif', 'svs']:
-                # img = pyvips.Image.tiffload(os.path.join(root, name), page=5)
-                classify_image(os.path.join(root, name), 2)
+    for file in path.iterate_files():
+        classify_image(file, image_index)
 
 def main():
     # Step 1. load the model that has been trained from a checkpoint file
@@ -257,30 +254,32 @@ def main():
     # img = tf.keras.utils.load_img(pathlib.Path('D:\\Training Data !\\Adam compressed\\Negative\\22073.jpg'), target_size = (180, 180))
 
     # Process arguments
-    # default_path = os.path.dirname("D:\\Training Data !\\Cam16\\Training\\Normal\\")
 
     provided_path = sys.argv[1]
-    print(provided_path)
-    interpreted_path = os.path.split(provided_path)
-    print(interpreted_path)
-    dir = None
-    file = None
+    path = PathHandler(provided_path)
 
-    if os.path.isdir(os.path.join(interpreted_path[0],interpreted_path[1],'\\')):
+    # interpreted_path = os.path.split(provided_path)
+    # print(interpreted_path)
+    # dir = None
+    # file = None
+
+    # if os.path.isdir(os.path.join(interpreted_path[0],interpreted_path[1],'\\')):
+    if path.folder():
         # The tail of the provided path is a folder
         # This will only be the case if all files are being
         # classified within the folder
-        print("dir")
-        dir = os.path.join(interpreted_path[0], interpreted_path[1])
-        classify_directory(dir)
-    if os.path.isfile(os.path.join(interpreted_path[0],interpreted_path[1])):
+        # print("dir")
+        # dir = os.path.join(interpreted_path[0], interpreted_path[1])
+        classify_directory(path)
+    # if os.path.isfile(os.path.join(interpreted_path[0],interpreted_path[1])):
+    elif path.file():
         # The tail of the provided path is a file
         # This will only be the case if a specific filed
         # is being classified
-        print("file")
-        dir = interpreted_path[0]
-        file = interpreted_path[1]
-        classify_image(os.path.join(dir, file), 2)
+        # print("file")
+        # dir = interpreted_path[0]
+        # file = interpreted_path[1]
+        classify_image(os.path.join(path.dir, path.file), image_index)
 
 
     # if os.path.isdir(interpreted_path[0]):
@@ -290,7 +289,7 @@ def main():
     #     # The provided path is a folder
     #     print("dir")
     #     dir = 0
-    elif dir == file == None:
+    else:
         # The provided path is neither a file nor a folder
         print("The specified path is not valid :(")
 

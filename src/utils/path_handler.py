@@ -50,6 +50,11 @@ class PathHandler:
         else:
             return False
 
-    def interate_files():
-        # Iterate over all the files in the folder
-        pass
+    def interate_files(self):
+        list_of_files = []
+        path = os.path.join(self.dir, self.file_name)
+        for root, dirs, files in os.walk(path, topdown=False):
+            for name in files:
+                if name[-3:] in ['tif', 'svs']:
+                    list_of_files.append(os.path.join(root, name))
+        return list_of_files
