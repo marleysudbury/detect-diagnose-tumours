@@ -21,8 +21,8 @@ import pathlib
 import numpy as np
 import sys
 import math
-from util.path_handler import PathHandler
-from util.image_pipeline import ImagePipeline
+from utils.path_handler import PathHandler
+from utils.image_pipeline import ImagePipeline
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
@@ -44,6 +44,7 @@ import cv2
 
 image_index = 2
 
+
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
     # `img` is a PIL image of size 299x299
@@ -61,7 +62,8 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     # First, we create a model that maps the input image to the activations
     # of the last conv layer as well as the output predictions
     grad_model = tf.keras.models.Model(
-        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+        [model.inputs], [model.get_layer(
+            last_conv_layer_name).output, model.output]
     )
 
     # Then, we compute the gradient of the top predicted class for our input image
@@ -91,6 +93,7 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
     return heatmap.numpy()
 
+
 def classify_image(pipeline, index):
     # Takes an image and prints the classification and confidence
     try:
@@ -105,7 +108,7 @@ def classify_image(pipeline, index):
         # img_array = tf.image.resize(img_array, [img_height, img_width])
 
         img_array = pipeline.convert_image(index, img_height, img_width, True)
-        img_array = tf.expand_dims(img_array, 0) # Create a batch
+        img_array = tf.expand_dims(img_array, 0)  # Create a batch
         class_names = ['Negative', 'Positive']
         predictions = model.predict(img_array)
         score = tf.nn.softmax(predictions[0])
@@ -158,14 +161,14 @@ def classify_image(pipeline, index):
 
         # Superimpose the heatmap on original image
         superimposed_img = jet_heatmap * 0.4 + img
-        superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
+        superimposed_img = keras.preprocessing.image.array_to_img(
+            superimposed_img)
 
         # Save the superimposed image
         # superimposed_img.save(cam_path)
 
         # Display Grad CAM
         # display(Image(cam_path))
-
 
         # imposed = heatmap * 0.4 + img_array
 
@@ -176,10 +179,12 @@ def classify_image(pipeline, index):
         print("An error occured while classifying the image")
         print("{}: {}".format(type(err).__name__, err))
 
+
 def classify_directory(pipeline, path):
     for file in path.iterate_files():
         pipeline.new_path(file)
         classify_image(pipeline, image_index)
+
 
 def main():
     # Step 1. load the model that has been trained from a checkpoint file
@@ -198,7 +203,7 @@ def main():
 
     AUTOTUNE = tf.data.AUTOTUNE
 
-    normalization_layer = layers.Rescaling(1./255)
+    normalization_layer = layers.Rescaling(1. / 255)
 
     num_classes = 2
 
@@ -208,7 +213,8 @@ def main():
     model = MakeModel(img_height, img_width, num_classes)
 
     model.compile(optimizer='Adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(
+                      from_logits=True),
                   metrics=['accuracy'])
 
     model.build((None, img_height, img_width, 3))
@@ -254,7 +260,6 @@ def main():
         pipeline.new_path(os.path.join(path.dir, path.file))
         classify_image(pipeline, image_index)
 
-
     # if os.path.isdir(interpreted_path[0]):
     #     # The head of the provided path is a folder
     #     # This will only be the case if the specified image or
@@ -266,9 +271,9 @@ def main():
         # The provided path is neither a file nor a folder
         print("The specified path is not valid :(")
 
-
     if '-a' in sys.argv:
         print('Classifying all images in directory')
+
 
 if __name__ == "__main__":
     main()

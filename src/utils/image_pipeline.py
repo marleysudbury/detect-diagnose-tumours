@@ -5,8 +5,10 @@
 # Written my Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
+import numpy as np
+import math
 import os
-
+import cv2
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
@@ -16,7 +18,9 @@ vipshome = config['libvips_path']
 
 # Include it in path PATH
 os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
+
 import pyvips
+
 
 class ImagePipeline:
     # This class handles image pipeline between .svs / .tif and Tensorflow
@@ -31,16 +35,16 @@ class ImagePipeline:
         # normalise the size of the images
         pass
 
-    def squarify(M,val):
+    def squarify(M, val):
         # Adapted from https://stackoverflow.com/a/45989739
-        (a,b,c)=M.shape
-        if a>b:
-            amount = math.floor((a-b)/2)
-            padding=((0,0),(amount,amount),(0,0))
+        (a, b, c) = M.shape
+        if a > b:
+            amount = math.floor((a - b) / 2)
+            padding = ((0, 0), (amount, amount), (0, 0))
         else:
-            amount = math.floor((b-a)/2)
-            padding=((amount,amount),(0,0),(0,0))
-        return np.pad(M,padding,mode='constant',constant_values=val)
+            amount = math.floor((b - a) / 2)
+            padding = ((amount, amount), (0, 0), (0, 0))
+        return np.pad(M, padding, mode='constant', constant_values=val)
 
     def convert_image(self, index, image_height=None, image_width=None, square=False):
         # Returns a numpy array of the specified image
@@ -60,7 +64,7 @@ class ImagePipeline:
         }
 
         try:
-            img = pyvips.Image.tiffload(path, page=index)
+            img = pyvips.Image.tiffload(self.path, page=index)
 
             if image_height is None:
                 image_height = img.height
@@ -73,9 +77,10 @@ class ImagePipeline:
                 shape=[img.height, img.width, img.bands]
             )
 
-            img_array = cv2.resize(img_array, dsize=(img_height, img_width), interpolation=cv2.INTER_CUBIC)
+            img_array = cv2.resize(img_array, dsize=(
+                image_height, image_width), interpolation=cv2.INTER_CUBIC)
             if square:
-                img_array = squarify(img_array, 255)
+                img_array = self.squarify(img_array, 255)
             return img_array
         except Exception as err:
             print("An error occured while reading the image")
