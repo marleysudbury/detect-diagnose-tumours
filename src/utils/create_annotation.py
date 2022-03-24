@@ -4,8 +4,6 @@ from imagescope_xml_utils.imagescope_xml_utils import ImageScopeXmlReader, Image
 import numpy as np
 import json
 
-print("Hello world")
-
 reader = ImageScopeXmlReader("22063.xml")
 
 print(len(reader.get_contours()[0][0]))
