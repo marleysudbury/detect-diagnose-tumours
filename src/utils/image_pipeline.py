@@ -11,6 +11,7 @@ import os
 import cv2
 import sys
 from path_handler import PathHandler
+from normalise_staining import normalizeStaining
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
@@ -32,10 +33,10 @@ class ImagePipeline:
     def new_path(self, path):
         self.path = path
 
-    def normalise_image(self):
+    def normalise_image(self, img):
         # Apply stain normalisation and
         # normalise the size of the images
-        pass
+        return normalizeStaining(img)
 
     def squarify(self, M, val):
         # Adapted from https://stackoverflow.com/a/45989739
@@ -140,7 +141,7 @@ if __name__ == "__main__":
                     array = pipeline.convert_image(
                         5, image_height=height, image_width=width, square=True)
                     if normalise == "Y":
-                        pass
+                        array = pipeline.normalise_image(array)[0]
                     else:
                         if normalise != "N":
                             print(
