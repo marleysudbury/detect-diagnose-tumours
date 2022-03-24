@@ -11,6 +11,7 @@ import os
 import cv2
 import sys
 from path_handler import PathHandler
+from normalise_staining import normalizeStaining
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
@@ -32,10 +33,11 @@ class ImagePipeline:
     def new_path(self, path):
         self.path = path
 
-    def normalise_image(self):
+    def normalise_image(self, img):
         # Apply stain normalisation and
         # normalise the size of the images
-        pass
+        normalised_image = normalizeStaining(img=img)
+        return normalised_image
 
     def squarify(self, M, val):
         # Adapted from https://stackoverflow.com/a/45989739
@@ -135,12 +137,42 @@ if __name__ == "__main__":
             if input_path.folder():
                 # Iterate over each image in the folder
                 for file in input_path.iterate_files():
+                    try:
+                        # Convert single image
+                        pipeline.new_path(file)
+                        array = pipeline.convert_image(
+                            3, image_height=height, image_width=width, square=True)
+                        if normalise == "Y":
+                            array = pipeline.normalise_image(array)[0]
+                        else:
+                            if normalise != "N":
+                                print(
+                                    "Invalid argument for normalise. Please use Y or N. Running with default value of N.")
+                            else:
+                                pass
+                        height, width, bands = array.shape
+                        linear = array.reshape(width * height * bands)
+                        image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
+                                                             dtype_to_format[str(array.dtype)])
+                        # image = image.thumbnail_image(
+                        # width, height=height, crop=True)
+                        file_name = file.split(
+                            os.path.sep)[-1].split(".")[0] + ".png"
+                        image.write_to_file(os.path.join(
+                            output_path.dir, file_name))
+
+                    except Exception as err:
+                        print("An error occured while converting the images")
+                        print("{}: {}".format(type(err).__name__, err))
+            elif input_path.file():
+                try:
                     # Convert single image
-                    pipeline.new_path(file)
+                    pipeline.new_path(os.path.join(
+                        input_path.dir, input_path.file_name))
                     array = pipeline.convert_image(
-                        5, image_height=height, image_width=width, square=True)
+                        3, image_height=height, image_width=width, square=True)
                     if normalise == "Y":
-                        pass
+                        array = pipeline.normalise_image(array)[0]
                     else:
                         if normalise != "N":
                             print(
@@ -151,36 +183,17 @@ if __name__ == "__main__":
                     linear = array.reshape(width * height * bands)
                     image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
                                                          dtype_to_format[str(array.dtype)])
-                    # image = image.thumbnail_image(
-                    # width, height=height, crop=True)
-                    file_name = file.split(
-                        os.path.sep)[-1].split(".")[0] + ".png"
+                    # image = image.thumbnail_image(width, height=height, crop=True)
+                    file_name = input_path.file_name.split(".")[0] + ".png"
                     image.write_to_file(os.path.join(
                         output_path.dir, file_name))
-            elif input_path.file():
-                # Convert single image
-                pipeline.new_path(os.path.join(
-                    input_path.dir, input_path.file_name))
-                array = pipeline.convert_image(
-                    5, image_height=height, image_width=width, square=True)
-                if normalise == "Y":
-                    pass
-                else:
-                    if normalise != "N":
-                        print(
-                            "Invalid argument for normalise. Please use Y or N. Running with default value of N.")
-                    else:
-                        pass
-                height, width, bands = array.shape
-                linear = array.reshape(width * height * bands)
-                image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                                     dtype_to_format[str(array.dtype)])
-                # image = image.thumbnail_image(width, height=height, crop=True)
-                file_name = input_path.file_name.split(".")[0] + ".png"
-                image.write_to_file(os.path.join(
-                    output_path.dir, file_name))
+
+                except Exception as err:
+                    print("An error occured while converting the image")
+                    print("{}: {}".format(type(err).__name__, err))
             else:
                 # Invalid path
                 print("Provided input path is not valid.")
+
     else:
         print("Usage: python image_pipeline.py source(path) destination(path) height(int) width(int) normalisation(Y/N)")
