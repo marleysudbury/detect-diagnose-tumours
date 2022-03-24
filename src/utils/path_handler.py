@@ -9,7 +9,7 @@ import sys
 
 
 class PathHandler:
-    def PathHandler(self, provided_path):
+    def __init__(self, provided_path):
         interpreted_path = os.path.split(provided_path)
         self.dir = None
         self.file_name = None
@@ -18,6 +18,7 @@ class PathHandler:
             interpreted_path[1],
             # '\\'
         )
+        self.valid = True
 
         if os.path.isdir(potential_path):
             # The tail of the provided path is a folder
@@ -35,6 +36,7 @@ class PathHandler:
         if self.dir == self.file_name == None:
             # The provided path is neither a file nor a folder
             print("Provided path is not valid")
+            self.valid = False
 
     def file(self):
         # Return true if current path specifies file
@@ -50,10 +52,10 @@ class PathHandler:
         else:
             return False
 
-    def interate_files(self):
+    def iterate_files(self):
         list_of_files = []
-        path = os.path.join(self.dir, self.file_name)
-        for root, dirs, files in os.walk(path, topdown=False):
+        # path = os.path.join(self.dir, self.file_name)
+        for root, dirs, files in os.walk(self.dir, topdown=False):
             for name in files:
                 if name[-3:] in ['tif', 'svs']:
                     list_of_files.append(os.path.join(root, name))

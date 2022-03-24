@@ -1,6 +1,6 @@
 # Loads contents of the config file
 
-f = open("../config", "r")
+f = open("config", "r")
 content = f.read()
 f.close()
 config = {}

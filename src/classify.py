@@ -12,6 +12,10 @@
 
 # Step 0. import libraries
 
+import cv2
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from IPython.display import Image, display
 import os
 import tensorflow as tf
 from tensorflow import keras
@@ -32,15 +36,11 @@ from utils.load_config import config
 vipshome = config['libvips_path']
 
 # Include it in path PATH
-os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
+os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
 import pyvips
 
 # For Grad-CAM visualisation
 # https://keras.io/examples/vision/grad_cam/
-from IPython.display import Image, display
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import cv2
 
 image_index = 2
 

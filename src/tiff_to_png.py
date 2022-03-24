@@ -17,38 +17,43 @@ from utils.load_config import config
 vipshome = config['libvips_path']
 
 # Include it in path PATH
-os.environ['PATH'] = vipshome + os.path.sep + os.environ['PATH']
+os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
 import pyvips
 
 # Adapted from https://stackoverflow.com/questions/62629946/python-converting-images-in-tif-format-to-png
 # Take images from this directory
 yourpath = os.path.dirname("E:\\Data\\Negative\\")
 # Save the images to this directory
-destination = os.path.dirname("D:\\Training Data !\\Adam compressed\\Negative\\")
+destination = os.path.dirname(
+    "D:\\Training Data !\\Adam compressed\\Negative\\")
 
-def squarify(M,val):
+
+def squarify(M, val):
     # Adapted from https://stackoverflow.com/a/45989739
-    (a,b,c)=M.shape
-    if a>b:
-        amount = math.floor((a-b)/2)
-        padding=((0,0),(amount,amount),(0,0))
+    (a, b, c) = M.shape
+    if a > b:
+        amount = math.floor((a - b) / 2)
+        padding = ((0, 0), (amount, amount), (0, 0))
     else:
-        amount = math.floor((b-a)/2)
-        padding=((amount,amount),(0,0),(0,0))
-    return np.pad(M,padding,mode='constant',constant_values=val)
+        amount = math.floor((b - a) / 2)
+        padding = ((amount, amount), (0, 0), (0, 0))
+    return np.pad(M, padding, mode='constant', constant_values=val)
+
 
 for root, dirs, files in os.walk(yourpath, topdown=False):
     for name in files:
         print(os.path.join(root, name))
         if os.path.splitext(os.path.join(root, name))[1].lower() == ".svs":
             if os.path.isfile(os.path.splitext(os.path.join(destination, name))[0] + ".png"):
-                print ("A png file already exists for %s" % name)
+                print("A png file already exists for %s" % name)
             # If a PNG is *NOT* present, create one from the TIF.
             else:
-                outfile = os.path.splitext(os.path.join(destination, name))[0] + ".png"
+                outfile = os.path.splitext(
+                    os.path.join(destination, name))[0] + ".png"
                 try:
                     print("Generating png for %s" % name)
-                    image = pyvips.Image.tiffload(os.path.join(root, name), page=2)
+                    image = pyvips.Image.tiffload(
+                        os.path.join(root, name), page=2)
 
                     format_to_dtype = {
                         'uchar': np.uint8,
@@ -76,7 +81,6 @@ for root, dirs, files in os.walk(yourpath, topdown=False):
                         'complex128': 'dpcomplex',
                     }
 
-
                     img_array = np.ndarray(
                         buffer=image.write_to_memory(),
                         dtype=format_to_dtype[image.format],
@@ -86,8 +90,8 @@ for root, dirs, files in os.walk(yourpath, topdown=False):
                     height, width, bands = new_array.shape
                     linear = new_array.reshape(width * height * bands)
                     image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                                    dtype_to_format[str(new_array.dtype)])
+                                                         dtype_to_format[str(new_array.dtype)])
                     image = image.thumbnail_image(1000, height=1000, crop=True)
                     image.write_to_file(outfile)
                 except Exception as e:
-                    print ("ERROR:",e)
+                    print("ERROR:", e)
