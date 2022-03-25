@@ -154,8 +154,6 @@ if __name__ == "__main__":
                         linear = array.reshape(width * height * bands)
                         image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
                                                              dtype_to_format[str(array.dtype)])
-                        # image = image.thumbnail_image(
-                        # width, height=height, crop=True)
                         file_name = file.split(
                             os.path.sep)[-1].split(".")[0] + ".png"
                         image.write_to_file(os.path.join(
