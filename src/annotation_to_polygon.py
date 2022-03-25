@@ -34,7 +34,12 @@ slide = openslide.OpenSlide(
 
 print(slide.dimensions)
 
-tile = slide.read_region((0, 0), 0, (1000, 1000))
-
-# img = Image.fromarray(tile)
-tile.save('patch.png')
+# Iterate over the center point of every 100x100 region of the slide
+for i in range(50, slide.dimensions[0], 100):
+    for j in range(50, slide.dimensions[1], 100):
+        point = Point(i, j)
+        for region in regions:
+            if region[0].contains(point):
+                tile = slide.read_region((i - 50, j - 50), 0, (100, 100))
+                tile.save('E:\\Training Data !\\Cam16Patch\\Training\\{}\\{}_{}_{}.png'.format(
+                    region[1], "tumor_001", i, j))
