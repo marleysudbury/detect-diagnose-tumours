@@ -12,32 +12,22 @@
 
 # Step 0. import libraries
 
-import cv2
+import os
+from utils.load_config import config
+openslidehome = config['openslide_path']
+
+os.add_dll_directory(openslidehome)
+import openslide
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-from IPython.display import Image, display
-import os
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-import pathlib
 import numpy as np
 import sys
-import math
 from utils.path_handler import PathHandler
-from utils.image_pipeline import ImagePipeline
-
-# These files are required, they can be downloaded at:
-# https://github.com/libvips/libvips/releases
-# Change this for your install location and vips version, and remember to
-# use double backslashes
-from utils.load_config import config
-vipshome = config['libvips_path']
-
-# Include it in path PATH
-os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
-import pyvips
+# from utils.image_pipeline import ImagePipeline
 
 # For Grad-CAM visualisation
 # https://keras.io/examples/vision/grad_cam/
@@ -92,6 +82,21 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     # For visualization purpose, we will also normalize the heatmap between 0 & 1
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
     return heatmap.numpy()
+
+
+def classify_array(array):
+    # Used to classify patch
+    # Takes an image and prints the classification and confidence
+
+    img_array = tf.expand_dims(array, 0)  # Create a batch
+    class_names = ['Negative', 'Positive']
+    predictions = model.predict(img_array)
+    score = tf.nn.softmax(predictions[0])
+
+    print(
+        "This image most likely belongs to {} with a {:.2f} percent confidence."
+        .format(class_names[np.argmax(score)], 100 * np.max(score))
+    )
 
 
 def classify_image(pipeline, index):
@@ -209,7 +214,7 @@ def main():
 
     # Create a basic model instance
     global model
-    from models.first_model import MakeModel
+    from models.second_model import MakeModel
     model = MakeModel(img_height, img_width, num_classes)
 
     model.compile(optimizer='Adam',
@@ -221,7 +226,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "E:/model_adam_100/cp.ckpt"
+    checkpoint_path = "E:/model_2_adam_100_patch/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -234,7 +239,7 @@ def main():
     provided_path = sys.argv[1]
     path = PathHandler(provided_path)
 
-    pipeline = ImagePipeline()
+    # pipeline = ImagePipeline()
 
     # interpreted_path = os.path.split(provided_path)
     # print(interpreted_path)
@@ -248,6 +253,7 @@ def main():
         # classified within the folder
         # print("dir")
         # dir = os.path.join(interpreted_path[0], interpreted_path[1])
+        pipeline = ImagePipeline()
         classify_directory(pipeline, path)
     # if os.path.isfile(os.path.join(interpreted_path[0],interpreted_path[1])):
     elif path.file():
@@ -257,8 +263,22 @@ def main():
         # print("file")
         # dir = interpreted_path[0]
         # file = interpreted_path[1]
-        pipeline.new_path(os.path.join(path.dir, path.file))
-        classify_image(pipeline, image_index)
+        if config['patch'] == "True":
+            slide = openslide.OpenSlide(
+                "E:\\Training Data !\\Cam16\\Training\\Tumor\\tumor_001.tif")
+
+            print(slide.dimensions)
+
+            # Iterate over the center point of every 100x100 region of the slide
+            for i in range(50, slide.dimensions[0], 100):
+                for j in range(50, slide.dimensions[1], 100):
+                    tile = slide.read_region(
+                        (i - 50, j - 50), 0, (100, 100)).convert("RGB")
+                    classify_array(tile)
+        else:
+            pipeline = ImagePipeline()
+            pipeline.new_path(os.path.join(path.dir, path.file))
+            classify_image(pipeline, image_index)
 
     # if os.path.isdir(interpreted_path[0]):
     #     # The head of the provided path is a folder

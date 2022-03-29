@@ -10,14 +10,14 @@ import math
 import os
 import cv2
 import sys
-from path_handler import PathHandler
-from normalise_staining import normalizeStaining
+from .path_handler import PathHandler
+from .normalise_staining import normalizeStaining
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
 # use double backslashes
-from load_config import config
+from .load_config import config
 vipshome = config['libvips_path']
 
 # Include it in path PATH
