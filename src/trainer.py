@@ -15,9 +15,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import pathlib
-batch_size = 6
-img_height = 1000
-img_width = 1000
+batch_size = 64
+img_height = 100
+img_width = 100
 
 data_augmentation = keras.Sequential(
   [
@@ -34,14 +34,14 @@ from second_model import MakeModel
 
 # Import my own modules
 
-from path_handler import PathHandler
-from image_pipeline import ImagePipeline
-
-path = PathHandler(sys.argv[1])
-pipeline = ImagePipeline()
+# from path_handler import PathHandler
+# from image_pipeline import ImagePipeline
+#
+# path = PathHandler(sys.argv[1])
+# pipeline = ImagePipeline()
 
 # data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
-data_dir = pathlib.Path('/media/c1838838/REM3/Training Data !/Adam compressed')
+data_dir = pathlib.Path('/media/c1838838/REM3/Training Data !/Head_Neck_Patch')
 
 image_count = len(list(data_dir.glob('*/*.jpg')))
 print(image_count)
@@ -115,7 +115,7 @@ model.summary()
 # Save the model so that it can be loaded later
 # Adapted from https://www.tensorflow.org/tutorials/keras/save_and_load
 
-checkpoint_path = "/media/c1838838/REM3/model_2_adam_1000/cp.ckpt"
+checkpoint_path = "/media/c1838838/REM3/model_2_adam_100_patch/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 
 # Create a callback that saves the model's weights
@@ -123,7 +123,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
 
-epochs=100
+epochs=200
 history = model.fit(
   train_ds,
   validation_data=val_ds,
