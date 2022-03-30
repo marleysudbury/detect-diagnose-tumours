@@ -27,6 +27,7 @@ from tensorflow.keras.models import Sequential
 import numpy as np
 import sys
 from utils.path_handler import PathHandler
+from PIL import Image
 # from utils.image_pipeline import ImagePipeline
 
 # For Grad-CAM visualisation
@@ -89,14 +90,21 @@ def classify_array(array):
     # Takes an image and prints the classification and confidence
 
     img_array = tf.expand_dims(array, 0)  # Create a batch
-    class_names = ['Negative', 'Positive']
+    class_names = ['Negative', 'Other', 'Positive']
     predictions = model.predict(img_array)
     score = tf.nn.softmax(predictions[0])
 
-    print(
-        "This image most likely belongs to {} with a {:.2f} percent confidence."
-        .format(class_names[np.argmax(score)], 100 * np.max(score))
-    )
+    # print(
+    #     "This image most likely belongs to {} with a {:.2f} percent confidence."
+    #     .format(class_names[np.argmax(score)], 100 * np.max(score))
+    # )
+
+    if class_names[np.argmax(score)] == "Positive":
+        return (255, 0, 0)
+    elif class_names[np.argmax(score)] == "Negative":
+        return (0, 255, 0)
+    elif class_names[np.argmax(score)] == "Other":
+        return (100, 100, 100)
 
 
 def classify_image(pipeline, index):
@@ -199,7 +207,7 @@ def main():
     # recreated. This could be improved by creating a create_model()
     # function in another file.
 
-    batch_size = 32
+    batch_size = 64
     global img_height
     global img_width
 
@@ -210,7 +218,7 @@ def main():
 
     normalization_layer = layers.Rescaling(1. / 255)
 
-    num_classes = 2
+    num_classes = 3
 
     # Create a basic model instance
     global model
@@ -226,7 +234,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "E:/model_2_adam_100_patch/cp.ckpt"
+    checkpoint_path = "D:/model_2_adam_100_patch/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -265,16 +273,20 @@ def main():
         # file = interpreted_path[1]
         if config['patch'] == "True":
             slide = openslide.OpenSlide(
-                "E:\\Training Data !\\Cam16\\Training\\Tumor\\tumor_001.tif")
+                "D:\\Training Data !\\Cam16\\Training\\Normal\\normal_001.tif")
 
             print(slide.dimensions)
-
+            mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
+            pixel_map = mask.load()
             # Iterate over the center point of every 100x100 region of the slide
-            for i in range(50, slide.dimensions[0], 100):
-                for j in range(50, slide.dimensions[1], 100):
+            for i in range(0, slide.dimensions[0]-99, 100):
+                for j in range(0, slide.dimensions[1]-99, 100):
                     tile = slide.read_region(
-                        (i - 50, j - 50), 0, (100, 100)).convert("RGB")
-                    classify_array(tile)
+                        (i, j), 0, (100, 100)).convert("RGB")
+                    color = classify_array(tile)
+                    pixel_map[i//100, j//100] = color
+                mask.save("mask.png")
+            mask.show()
         else:
             pipeline = ImagePipeline()
             pipeline.new_path(os.path.join(path.dir, path.file))

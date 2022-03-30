@@ -1,5 +1,5 @@
 libvips_path: C:\Users\Marley\Downloads\vips-dev-8.12\bin
-openslide_path: C:\Users\Marley\Downloads\openslide-win64-20171122\bin
+openslide_path: C:\Users\c1838838\Downloads\openslide-win64-20171122\bin
 model_name: model_2_100
 img_size: 100
 patch: True

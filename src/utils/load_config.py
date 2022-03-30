@@ -5,5 +5,6 @@ content = f.read()
 f.close()
 config = {}
 for pair in content.split("\n"):
-    items = pair.split(": ")
-    config[items[0]] = items[1]
+    if pair != "":
+        items = pair.split(": ")
+        config[items[0]] = items[1]
