@@ -234,7 +234,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "D:/model_2_adam_100_patch/cp.ckpt"
+    checkpoint_path = "E:/model_2_adam_100_patch/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -273,19 +273,36 @@ def main():
         # file = interpreted_path[1]
         if config['patch'] == "True":
             slide = openslide.OpenSlide(
-                "D:\\Training Data !\\Cam16\\Training\\Normal\\normal_001.tif")
+                "E:\\Training Data !\\Cam16\\Training\\Normal\\normal_001.tif")
 
             print(slide.dimensions)
-            mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
+            print(slide.level_dimensions)
+            # mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
+            # pixel_map = mask.load()
+            # # Iterate over the center point of every 100x100 region of the slide
+            # for i in range(0, slide.dimensions[0]-99, 100):
+            #     for j in range(0, slide.dimensions[1]-99, 100):
+            #         tile = slide.read_region(
+            #             (i, j), 0, (100, 100)).convert("RGB")
+            #         color = classify_array(tile)
+            #         pixel_map[i//100, j//100] = color
+            #     mask.save("mask.png")
+            # mask.show()
+            layer = 4
+            mask = Image.new(mode="RGB", size=(
+                slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
             pixel_map = mask.load()
+            ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
             # Iterate over the center point of every 100x100 region of the slide
-            for i in range(0, slide.dimensions[0]-99, 100):
-                for j in range(0, slide.dimensions[1]-99, 100):
+            for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
+                for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
                     tile = slide.read_region(
-                        (i, j), 0, (100, 100)).convert("RGB")
+                        (i, j), layer, (100, 100)).convert("RGB")
                     color = classify_array(tile)
-                    pixel_map[i//100, j//100] = color
+                    pixel_map[i // (100 * ratio), j // (100 * ratio)] = color
                 mask.save("mask.png")
+                print("Column {}/{} complete".format(i // (100 * ratio),
+                      slide.level_dimensions[4][0] // 100))
             mask.show()
         else:
             pipeline = ImagePipeline()
