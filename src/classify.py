@@ -288,7 +288,7 @@ def main():
             #         pixel_map[i//100, j//100] = color
             #     mask.save("mask.png")
             # mask.show()
-            layer = 4
+            layer = 4 # 1/16
             mask = Image.new(mode="RGB", size=(
                 slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
             pixel_map = mask.load()
