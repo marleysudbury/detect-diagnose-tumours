@@ -234,7 +234,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "E:/model_2_adam_100_patch/cp.ckpt"
+    checkpoint_path = "D:/model_2_adam_100_patch_1-16/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -273,7 +273,7 @@ def main():
         # file = interpreted_path[1]
         if config['patch'] == "True":
             slide = openslide.OpenSlide(
-                "E:\\Training Data !\\Cam16\\Training\\Normal\\normal_001.tif")
+                "E:\\Data\\Positive\\22113.svs")
 
             print(slide.dimensions)
             print(slide.level_dimensions)
@@ -288,7 +288,8 @@ def main():
             #         pixel_map[i//100, j//100] = color
             #     mask.save("mask.png")
             # mask.show()
-            layer = 4 # 1/16
+            layer = 2 # 1/16 in H&N Data
+            # layer = 4 # 1/16 in Cam16 Data
             mask = Image.new(mode="RGB", size=(
                 slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
             pixel_map = mask.load()
@@ -301,8 +302,8 @@ def main():
                     color = classify_array(tile)
                     pixel_map[i // (100 * ratio), j // (100 * ratio)] = color
                 mask.save("mask.png")
-                print("Column {}/{} complete".format(i // (100 * ratio),
-                      slide.level_dimensions[4][0] // 100))
+                print("Column {}/{} complete".format(i // (100 * ratio) + 1,
+                      slide.level_dimensions[layer][0] // 100))
             mask.show()
         else:
             pipeline = ImagePipeline()
