@@ -1,6 +1,7 @@
-# Convert annotation file to a shapely polygon
+# Convert annotation file to a shapely polygon and output patches according to
+# their annotation.
 
-# Written my Marley Sudbury (1838838)
+# Written by Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
 import os
@@ -10,19 +11,24 @@ import numpy as np
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from PIL import Image
+from utils.normalise_staining import normalizeStaining
 from utils.load_config import config
 openslidehome = config['openslide_path']
 
 os.add_dll_directory(openslidehome)
 import openslide
 
+# Parameters to run the program
+# TODO: take these from command line
 filename = "22158"
+normalise = True
+contains_negative = False
+contains_positive = True
 
 with open('D:\\Training Data !\\Head_Neck_Annotations\\{}.geojson'.format(filename)) as f:
     json_data = json.load(f)
 
 regions = []
-contains_negative = False
 
 for region in json_data['features']:
     json_coords = region['geometry']['coordinates'][0]
@@ -53,14 +59,19 @@ ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
 for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
     for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
         point = Point(i+(50*ratio), j+(50*ratio))
+        patch_polygon = Polygon([[i, j], [i+100, j], [i+100, j+100], [i, j+100]])
         patch_class = "Other"
         for region in regions:
-            if region[0].contains(point):
+            if patch_polygon.within(region[0]) and patch_class != "Positive":
+                # Order or priority: Positive > Negative > Other
                 patch_class = region[1]
 
         if patch_class == "Negative" and class_count[patch_class] < 500 or class_count[patch_class] < 200:
             try:
                 tile = slide.read_region((i, j), layer, (100, 100))
+                if normalise {
+                    tile = normalizeStaining(img=tile)
+                }
                 tile.save('D:\\Training Data !\\Head_Neck_Patch\\{}\\{}_{}_{}.png'.format(
                     patch_class, filename, i, j))
                 class_count[patch_class] += 1

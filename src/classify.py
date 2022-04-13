@@ -1,7 +1,7 @@
 # Program to take input .svs or .tif and give classification
 # according to pretrained model
 
-# Written my Marley Sudbury (1838838)
+# Written by Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
 # Instructions for use

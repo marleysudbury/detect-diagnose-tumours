@@ -1,6 +1,6 @@
 # Train neural network on specified data
 
-# Written my Marley Sudbury (1838838)
+# Written by Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
 # Adapted from https://www.tensorflow.org/tutorials/images/classification
