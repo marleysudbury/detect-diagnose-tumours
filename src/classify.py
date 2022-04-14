@@ -26,6 +26,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import numpy as np
 import sys
+from utils.normalise_staining import normalizeStaining
 from utils.path_handler import PathHandler
 from PIL import Image
 # from utils.image_pipeline import ImagePipeline
@@ -35,6 +36,7 @@ from PIL import Image
 
 image_index = 2
 
+normalise = True
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -88,23 +90,30 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
 def classify_array(array):
     # Used to classify patch
     # Takes an image and prints the classification and confidence
+    try:
+        class_names = ['Negative', 'Other', 'Positive']
+        if normalise:
+            array = np.transpose(np.array(array), axes=[1,0,2])
+            array = normalizeStaining(img=array)[0]
+        img_array = tf.expand_dims(array, 0)  # Create a batch
+        predictions = model.predict(img_array)
+        score = tf.nn.softmax(predictions[0])
 
-    img_array = tf.expand_dims(array, 0)  # Create a batch
-    class_names = ['Negative', 'Other', 'Positive']
-    predictions = model.predict(img_array)
-    score = tf.nn.softmax(predictions[0])
+        # print(
+        #     "This image most likely belongs to {} with a {:.2f} percent confidence."
+        #     .format(class_names[np.argmax(score)], 100 * np.max(score))
+        # )
 
-    # print(
-    #     "This image most likely belongs to {} with a {:.2f} percent confidence."
-    #     .format(class_names[np.argmax(score)], 100 * np.max(score))
-    # )
-
-    if class_names[np.argmax(score)] == "Positive":
-        return (255, 0, 0)
-    elif class_names[np.argmax(score)] == "Negative":
-        return (0, 255, 0)
-    elif class_names[np.argmax(score)] == "Other":
-        return (100, 100, 100)
+        if class_names[np.argmax(score)] == "Positive":
+            return (255, 0, 0)
+        elif class_names[np.argmax(score)] == "Negative":
+            return (0, 255, 0)
+        elif class_names[np.argmax(score)] == "Other":
+            return (100, 100, 100)
+    except Exception as err:
+        print("An error occured while normalising the region")
+        print("{}: {}".format(type(err).__name__, err))
+        return (0, 0, 0)
 
 
 def classify_image(pipeline, index):
@@ -234,7 +243,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "D:/model_2_adam_100_patch_1-16/cp.ckpt"
+    checkpoint_path = "D:/model_2_adam_100_patch_1-16_Normalised/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
@@ -273,7 +282,8 @@ def main():
         # file = interpreted_path[1]
         if config['patch'] == "True":
             slide = openslide.OpenSlide(
-                "E:\\Data\\Positive\\22113.svs")
+                # "E:\\Data\\Positive\\22113.svs")
+                "D:\\Training Data !\\Cam16\\Training\\Tumor\\tumor_001.tif")
 
             print(slide.dimensions)
             print(slide.level_dimensions)
@@ -288,8 +298,8 @@ def main():
             #         pixel_map[i//100, j//100] = color
             #     mask.save("mask.png")
             # mask.show()
-            layer = 2 # 1/16 in H&N Data
-            # layer = 4 # 1/16 in Cam16 Data
+            # layer = 2 # 1/16 in H&N Data
+            layer = 4 # 1/16 in Cam16 Data
             mask = Image.new(mode="RGB", size=(
                 slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
             pixel_map = mask.load()
