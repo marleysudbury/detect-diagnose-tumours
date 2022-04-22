@@ -23,9 +23,9 @@ import openslide
 # TODO: take these from command line
 filename = "22076"
 slide_classification = "Negative"
-normalise = True
+normalise = False
 
-with open('D:\\Training Data !\\Head_Neck_Annotations\\{}\\{}.geojson'.format(slide_classification, filename)) as f:
+with open('D:\\fyp\\Training Data !\\Head_Neck_Annotations\\{}\\{}.geojson'.format(slide_classification, filename)) as f:
     json_data = json.load(f)
 
 regions = []
@@ -83,9 +83,11 @@ for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
                 if normalise:
                     tile = np.transpose(np.array(tile), axes=[1,0,2])
                     tile = normalizeStaining(img=tile)[0]
-
-                Image.fromarray(tile).save('D:\\Training Data !\\Head_Neck_Patch\\{}\\{}_{}_{}.png'.format(
-                    patch_class, filename, i, j))
+                    Image.fromarray(tile).save('D:\\fyp\\Training Data !\\Head_Neck_Patch_1-16\\{}\\{}_{}_{}.png'.format(
+                        patch_class, filename, i, j))
+                else:
+                    tile.save('D:\\fyp\\Training Data !\\Head_Neck_Patch_1-16\\{}\\{}_{}_{}.png'.format(
+                        patch_class, filename, i, j))
                 class_count[patch_class] += 1
                 print("This patch: {}. P:{}/100 N:{}/250 O:{}/100".format(patch_class,
                       class_count['Positive'], class_count['Negative'], class_count['Other']))
