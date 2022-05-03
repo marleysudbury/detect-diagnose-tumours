@@ -12,10 +12,8 @@
 
 # Step 0. import libraries
 
-import cv2
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-from IPython.display import Image, display
 import os
 import tensorflow as tf
 from tensorflow import keras
@@ -44,6 +42,8 @@ import pyvips
 
 image_index = 2
 
+# Data structure to store data for evaluation
+classification_confidences = []
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -117,7 +117,7 @@ def classify_image(pipeline, index):
             "This image most likely belongs to {} with a {:.2f} percent confidence."
             .format(class_names[np.argmax(score)], 100 * np.max(score))
         )
-        # return
+        return class_names[np.argmax(score)], 100 * np.max(score)
 
         model_builder = keras.applications.xception.Xception
         img_size = (img_height, img_width)
@@ -183,7 +183,17 @@ def classify_image(pipeline, index):
 def classify_directory(pipeline, path):
     for file in path.iterate_files():
         pipeline.new_path(file)
-        classify_image(pipeline, image_index)
+        label, confidence = classify_image(pipeline, image_index)
+        classification_confidences.append(confidence)
+
+    # AUC evaluation adapted from:
+    # https://www.tensorflow.org/api_docs/python/tf/keras/metrics/AUC
+
+    m = tf.keras.metrics.AUC(num_thresholds=3)
+    correct = [1 for i in range(0,50)]
+    # correct = [0 for i in range(0,50)]
+    m.update_state(correct, classification_confidences)
+    m.result().numpy()
 
 
 def main():
@@ -221,7 +231,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "E:/model_adam_100/cp.ckpt"
+    checkpoint_path = "D:/fyp/models/new/WSI_100/cp.ckpt"
     model.load_weights(checkpoint_path)
 
     # Step 2. load the image to check
