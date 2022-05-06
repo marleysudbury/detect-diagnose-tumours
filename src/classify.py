@@ -45,6 +45,7 @@ image_index = 2
 # Data structure to store data for evaluation
 classification_confidences = []
 
+
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
     # `img` is a PIL image of size 299x299
@@ -189,11 +190,11 @@ def classify_directory(pipeline, path):
     # AUC evaluation adapted from:
     # https://www.tensorflow.org/api_docs/python/tf/keras/metrics/AUC
 
-    m = tf.keras.metrics.AUC(num_thresholds=3)
-    correct = [1 for i in range(0,50)]
-    # correct = [0 for i in range(0,50)]
-    m.update_state(correct, classification_confidences)
-    m.result().numpy()
+    # m = tf.keras.metrics.AUC(num_thresholds=3)
+    # correct = [1 for i in range(0, 50)]
+    # # correct = [0 for i in range(0,50)]
+    # m.update_state(correct, classification_confidences)
+    # m.result().numpy()
 
 
 def main():
@@ -204,7 +205,7 @@ def main():
     # recreated. This could be improved by creating a create_model()
     # function in another file.
 
-    batch_size = 32
+    batch_size = 64
     global img_height
     global img_width
 
@@ -231,8 +232,13 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "D:/fyp/models/new/WSI_100/cp.ckpt"
-    model.load_weights(checkpoint_path)
+    model_name = "alpha"
+    print("Using model: {}".format(model_name))
+    checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
+    try:
+        model.load_weights(checkpoint_path)
+    except:
+        pass
 
     # Step 2. load the image to check
 
