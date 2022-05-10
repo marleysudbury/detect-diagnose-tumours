@@ -12,6 +12,8 @@
 
 # Step 0. import libraries
 
+import numpy as np
+np.random.seed(1337)
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import os
@@ -20,7 +22,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import pathlib
-import numpy as np
 import sys
 import math
 from utils.path_handler import PathHandler
@@ -40,10 +41,15 @@ import pyvips
 # For Grad-CAM visualisation
 # https://keras.io/examples/vision/grad_cam/
 
-image_index = 2
+image_index = 4
 
 # Data structure to store data for evaluation
 classification_confidences = []
+actual_classification = "Positive"
+tp = 0
+fp = 0
+tn = 0
+fn = 0
 
 
 def get_img_array(img_path, size):
@@ -184,17 +190,54 @@ def classify_image(pipeline, index):
 def classify_directory(pipeline, path):
     for file in path.iterate_files():
         pipeline.new_path(file)
-        label, confidence = classify_image(pipeline, image_index)
-        classification_confidences.append(confidence)
+        try:
+            label, confidence = classify_image(pipeline, image_index)
+        except:
+            label, confidence = classify_image(pipeline, 3)
+
+        if label == "Negative":
+            confidence = 0.5 - (confidence - 0.5)
+        classification_confidences.append(confidence / 100)
+        global tn, tp, fn, fp
+        if actual_classification == label:
+            if label == "Negative":
+                tn += 1
+            else:
+                tp += 1
+        else:
+            if label == "Negative":
+                fn += 1
+            else:
+                fp += 1
+
+    print("At 0.5 threshold (default). TP: {}, FP: {}, TN: {}, FN: {}".format(
+        tp, fp, tn, fn))
+
+    step = 0.01
+    for i in np.arange(0.0, 1 + step, step):
+        tp = fp = tn = fn = 0
+        for con in classification_confidences:
+            if con <= i:
+                if actual_classification == "Negative":
+                    tn += 1
+                else:
+                    fn += 1
+            else:
+                if actual_classification == "Negative":
+                    fp += 1
+                else:
+                    tp += 1
+        print("At {} threshold. TP: {}, FP: {}, TN: {}, FN: {}".format(
+            i, tp, fp, tn, fn))
 
     # AUC evaluation adapted from:
     # https://www.tensorflow.org/api_docs/python/tf/keras/metrics/AUC
 
-    # m = tf.keras.metrics.AUC(num_thresholds=3)
+    m = tf.keras.metrics.AUC(num_thresholds=100)
     # correct = [1 for i in range(0, 50)]
-    # # correct = [0 for i in range(0,50)]
-    # m.update_state(correct, classification_confidences)
-    # m.result().numpy()
+    correct = [0 for i in range(0, 50)]
+    m.update_state(correct, classification_confidences)
+    print(m.result().numpy())
 
 
 def main():
@@ -220,7 +263,7 @@ def main():
 
     # Create a basic model instance
     global model
-    from models.first_model import MakeModel
+    from models.second_model import MakeModel
     model = MakeModel(img_height, img_width, num_classes)
 
     model.compile(optimizer='Adam',

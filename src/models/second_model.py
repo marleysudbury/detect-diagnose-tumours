@@ -1,5 +1,7 @@
 # https://arxiv.org/abs/1702.05931
 
+import numpy as np
+np.random.seed(1337)
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from utils.data_augmentation import DataAugmentation
