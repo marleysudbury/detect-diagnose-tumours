@@ -41,11 +41,11 @@ import pyvips
 # For Grad-CAM visualisation
 # https://keras.io/examples/vision/grad_cam/
 
-image_index = 4
+image_index = 3
 
 # Data structure to store data for evaluation
 classification_confidences = []
-actual_classification = "Positive"
+actual_classification = "Negative"
 tp = 0
 fp = 0
 tn = 0
@@ -193,25 +193,26 @@ def classify_directory(pipeline, path):
         try:
             label, confidence = classify_image(pipeline, image_index)
         except:
-            label, confidence = classify_image(pipeline, 3)
+            # label, confidence = classify_image(pipeline, 2)
+            print("Couldn't load image")
 
         if label == "Negative":
-            confidence = 0.5 - (confidence - 0.5)
+            confidence = 100 - confidence
         classification_confidences.append(confidence / 100)
-        global tn, tp, fn, fp
-        if actual_classification == label:
-            if label == "Negative":
-                tn += 1
-            else:
-                tp += 1
-        else:
-            if label == "Negative":
-                fn += 1
-            else:
-                fp += 1
-
-    print("At 0.5 threshold (default). TP: {}, FP: {}, TN: {}, FN: {}".format(
-        tp, fp, tn, fn))
+    #     global tn, tp, fn, fp
+    #     if actual_classification == label:
+    #         if label == "Negative":
+    #             tn += 1
+    #         else:
+    #             tp += 1
+    #     else:
+    #         if label == "Negative":
+    #             fn += 1
+    #         else:
+    #             fp += 1
+    #
+    # print("At 0.5 threshold (default). TP: {}, FP: {}, TN: {}, FN: {}".format(
+    #     tp, fp, tn, fn))
 
     step = 0.01
     for i in np.arange(0.0, 1 + step, step):
@@ -230,12 +231,14 @@ def classify_directory(pipeline, path):
         print("At {} threshold. TP: {}, FP: {}, TN: {}, FN: {}".format(
             i, tp, fp, tn, fn))
 
+    print(classification_confidences)
+
     # AUC evaluation adapted from:
     # https://www.tensorflow.org/api_docs/python/tf/keras/metrics/AUC
 
     m = tf.keras.metrics.AUC(num_thresholds=100)
-    # correct = [1 for i in range(0, 50)]
-    correct = [0 for i in range(0, 50)]
+    # correct = [1 for i in range(0, 100)]
+    correct = [0 for i in range(0, 100)]
     m.update_state(correct, classification_confidences)
     print(m.result().numpy())
 
@@ -275,9 +278,9 @@ def main():
 
     model.summary()
 
-    model_name = "alpha"
+    model_name = "beta_a"
     print("Using model: {}".format(model_name))
-    checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
+    checkpoint_path = "D:/fyp/models/{}/cp.ckpt".format(model_name)
     try:
         model.load_weights(checkpoint_path)
     except:
