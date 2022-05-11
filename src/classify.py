@@ -13,7 +13,7 @@
 # Step 0. import libraries
 
 import numpy as np
-np.random.seed(1337)
+# np.random.seed(1337)
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import os
@@ -45,12 +45,13 @@ image_index = 3
 
 # Data structure to store data for evaluation
 classification_confidences = []
-actual_classification = "Negative"
+actual_classification = "Positive"
 tp = 0
 fp = 0
 tn = 0
 fn = 0
 
+stain_normalisation = True
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -115,6 +116,8 @@ def classify_image(pipeline, index):
         # img_array = tf.image.resize(img_array, [img_height, img_width])
 
         img_array = pipeline.convert_image(index, img_height, img_width, True)
+        if stain_normalisation:
+            img_array = pipeline.normalise_image(img_array)[0]
         img_array = tf.expand_dims(img_array, 0)  # Create a batch
         class_names = ['Negative', 'Positive']
         predictions = model.predict(img_array)
@@ -278,7 +281,7 @@ def main():
 
     model.summary()
 
-    model_name = "beta_a"
+    model_name = "alpha"
     print("Using model: {}".format(model_name))
     checkpoint_path = "D:/fyp/models/{}/cp.ckpt".format(model_name)
     try:
