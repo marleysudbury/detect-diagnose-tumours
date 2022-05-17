@@ -38,6 +38,7 @@ image_index = 2
 
 normalise = True
 
+
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
     # `img` is a PIL image of size 299x299
@@ -93,7 +94,7 @@ def classify_array(array):
     try:
         class_names = ['Negative', 'Other', 'Positive']
         if normalise:
-            array = np.transpose(np.array(array), axes=[1,0,2])
+            array = np.transpose(np.array(array), axes=[1, 0, 2])
             array = normalizeStaining(img=array)[0]
         img_array = tf.expand_dims(array, 0)  # Create a batch
         predictions = model.predict(img_array)
@@ -105,9 +106,9 @@ def classify_array(array):
         # )
 
         if class_names[np.argmax(score)] == "Positive":
-            return (255, 0, 0)
+            return (int(predictions[0] * 100), int(predictions[1] * 100), 0)
         elif class_names[np.argmax(score)] == "Negative":
-            return (0, 255, 0)
+            return (int(predictions[1] * 100), int(predictions[0] * 100), 0)
         elif class_names[np.argmax(score)] == "Other":
             return (100, 100, 100)
     except Exception as err:
@@ -299,7 +300,7 @@ def main():
             #     mask.save("mask.png")
             # mask.show()
             # layer = 2 # 1/16 in H&N Data
-            layer = 4 # 1/16 in Cam16 Data
+            layer = 4  # 1/16 in Cam16 Data
             mask = Image.new(mode="RGB", size=(
                 slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
             pixel_map = mask.load()
@@ -312,7 +313,7 @@ def main():
                     # Check if patch is background (Section 4.3)
                     min_r = 255
                     min_g = 255
-                    mib_b = 255
+                    min_b = 255
                     for row in tile:
                         for pixel in row:
                             if pixel[0] < min_r:
@@ -323,7 +324,7 @@ def main():
                                 min_b = pixel[2]
                     if min_r < 220 and min_g < 220 and min_b < 220:
                         print("Background")
-                        color = (0,0,0)
+                        color = (0, 0, 0)
                     else:
                         color = classify_array(tile)
                     pixel_map[i // (100 * ratio), j // (100 * ratio)] = color
