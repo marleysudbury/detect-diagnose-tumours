@@ -309,7 +309,23 @@ def main():
                 for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
                     tile = slide.read_region(
                         (i, j), layer, (100, 100)).convert("RGB")
-                    color = classify_array(tile)
+                    # Check if patch is background (Section 4.3)
+                    min_r = 255
+                    min_g = 255
+                    mib_b = 255
+                    for row in tile:
+                        for pixel in row:
+                            if pixel[0] < min_r:
+                                min_r = pixel[0]
+                            if pixel[1] < min_g:
+                                min_g = pixel[1]
+                            if pixel[2] < min_b:
+                                min_b = pixel[2]
+                    if min_r < 220 and min_g < 220 and min_b < 220:
+                        print("Background")
+                        color = (0,0,0)
+                    else:
+                        color = classify_array(tile)
                     pixel_map[i // (100 * ratio), j // (100 * ratio)] = color
                 mask.save("mask.png")
                 print("Column {}/{} complete".format(i // (100 * ratio) + 1,
