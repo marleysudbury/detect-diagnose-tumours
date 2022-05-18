@@ -36,7 +36,7 @@ from PIL import Image
 
 image_index = 2
 
-normalise = True
+normalise = False
 
 
 def get_img_array(img_path, size):
@@ -92,7 +92,7 @@ def classify_array(array):
     # Used to classify patch
     # Takes an image and prints the classification and confidence
     try:
-        class_names = ['Negative', 'Other', 'Positive']
+        class_names = ['Negative', 'Positive']
         if normalise:
             array = np.transpose(np.array(array), axes=[1, 0, 2])
             array = normalizeStaining(img=array)[0]
@@ -105,12 +105,12 @@ def classify_array(array):
         #     .format(class_names[np.argmax(score)], 100 * np.max(score))
         # )
 
-        if class_names[np.argmax(score)] == "Positive":
-            return (int(predictions[0] * 100), int(predictions[1] * 100), 0)
-        elif class_names[np.argmax(score)] == "Negative":
-            return (int(predictions[1] * 100), int(predictions[0] * 100), 0)
-        elif class_names[np.argmax(score)] == "Other":
-            return (100, 100, 100)
+        # if class_names[np.argmax(score)] == "Positive":
+        #     return (int(score[0].numpy() * 100), int(score[1].numpy() * 100), 0)
+        # elif class_names[np.argmax(score)] == "Negative":
+        #     return (int(score[1].numpy() * 100), int(score[0].numpy() * 100), 0)
+
+        return (int(score[0].numpy() * 100), int(score[1].numpy() * 100), 0)
     except Exception as err:
         print("An error occured while normalising the region")
         print("{}: {}".format(type(err).__name__, err))
@@ -228,7 +228,7 @@ def main():
 
     normalization_layer = layers.Rescaling(1. / 255)
 
-    num_classes = 3
+    num_classes = 2
 
     # Create a basic model instance
     global model
@@ -244,8 +244,10 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "D:/model_2_adam_100_patch_1-16_Normalised/cp.ckpt"
+    checkpoint_path = "D:/fyp/models/alpha_a_p/cp.ckpt"
+    print("Here")
     model.load_weights(checkpoint_path)
+    print("Here")
 
     # Step 2. load the image to check
 
@@ -284,7 +286,7 @@ def main():
         if config['patch'] == "True":
             slide = openslide.OpenSlide(
                 # "E:\\Data\\Positive\\22113.svs")
-                "D:\\Training Data !\\Cam16\\Training\\Tumor\\tumor_001.tif")
+                "D:\\fyp\\Training Data !\\Cam16\\Training\\Tumor\\tumor_001.tif")
 
             print(slide.dimensions)
             print(slide.level_dimensions)
@@ -314,15 +316,17 @@ def main():
                     min_r = 255
                     min_g = 255
                     min_b = 255
-                    for row in tile:
-                        for pixel in row:
+                    for x in range(0, tile.width):
+                        for y in range(0, tile.height):
+                            pixel = tile.getpixel((x, y))
                             if pixel[0] < min_r:
                                 min_r = pixel[0]
                             if pixel[1] < min_g:
                                 min_g = pixel[1]
                             if pixel[2] < min_b:
                                 min_b = pixel[2]
-                    if min_r < 220 and min_g < 220 and min_b < 220:
+                    threshold = 200
+                    if min_r >= threshold and min_g >= threshold and min_b >= threshold:
                         print("Background")
                         color = (0, 0, 0)
                     else:
