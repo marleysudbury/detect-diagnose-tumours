@@ -244,7 +244,7 @@ def main():
 
     model.summary()
 
-    checkpoint_path = "D:/fyp/models/alpha_a_p/cp.ckpt"
+    checkpoint_path = "D:/fyp/models/alpha_a_p2/cp.ckpt"
     print("Here")
     model.load_weights(checkpoint_path)
     print("Here")
