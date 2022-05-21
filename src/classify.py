@@ -53,6 +53,7 @@ fn = 0
 
 stain_normalisation = True
 
+
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
     # `img` is a PIL image of size 299x299
@@ -281,7 +282,7 @@ def main():
 
     model.summary()
 
-    model_name = "alpha"
+    model_name = "alpha_n"
     print("Using model: {}".format(model_name))
     checkpoint_path = "D:/fyp/models/{}/cp.ckpt".format(model_name)
     try:
