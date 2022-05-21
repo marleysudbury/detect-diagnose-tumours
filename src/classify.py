@@ -282,13 +282,14 @@ def main():
 
     model.summary()
 
-    model_name = "alpha_n"
+    model_name = "beta_a_n"
     print("Using model: {}".format(model_name))
-    checkpoint_path = "D:/fyp/models/{}/cp.ckpt".format(model_name)
+    checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
     try:
         model.load_weights(checkpoint_path)
     except:
-        pass
+        print("Model not loaded correctly")
+        exit()
 
     # Step 2. load the image to check
 
