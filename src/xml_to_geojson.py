@@ -1,6 +1,8 @@
-# https://github.com/One-sixth/imagescope_xml_utils
+# Converts XML annotations from Camelyon16 dataset into GeoJSON
 
-# from imagescope_xml_utils.imagescope_xml_utils import ImageScopeXmlReader, ImageScopeXmlWriter
+# Written by Marley Sudbury (1838838)
+# for CM3203 One Semester Individual Project
+
 import numpy as np
 import json
 import xml.etree.ElementTree as ET
@@ -8,17 +10,17 @@ import xml.etree.ElementTree as ET
 # Adapted from:
 # https://docs.python.org/3/library/xml.etree.elementtree.html
 
-tree = ET.parse("D:\\Training Data !\\Cam16_Annotations\\tumor_001.xml")
+tree = ET.parse("D:\\fyp\\Training Data !\\Cam16_Annotations\\tumor_010.xml")
 
 root = tree.getroot()
 
-print(root[0][0][0][0].tag)
+# print(root[0][0][0][0].tag)
 
 json_obj = {}
 json_obj["type"] = "FeatureCollection"
 json_obj["features"] = []
 for annotation in root[0]:
-    print(annotation.tag)
+    # print(annotation.tag)
     polygon = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[]]}, "properties":{"object_type":"annotation","classification":{"name":"Tumor","colorRGB":-3670016},"isLocked":'false'}}
     for coord_pair in annotation[0]:
         polygon["geometry"]["coordinates"][0].append([coord_pair.get('X'), coord_pair.get('Y')])
@@ -27,8 +29,8 @@ for annotation in root[0]:
     # Add annotation to JSON
     json_obj["features"].append(polygon)
 
-print(json_obj)
-with open('my_output.json','w') as jsonFile:
+# print(json_obj)
+with open('my_output.geojson','w') as jsonFile:
     json.dump(json_obj, jsonFile)
 
 # reader = ImageScopeXmlReader("D:\\Training Data !\\Cam16_Annotations\\tumor_001.xml")

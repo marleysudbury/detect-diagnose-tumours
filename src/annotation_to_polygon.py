@@ -59,10 +59,10 @@ slide = openslide.OpenSlide(
 
 print(slide.dimensions)
 
-layer = 2 # 1/16
+layer = 2 # 1/4
 ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
 
-# Iterate over the center point of every 100x100 region of the slide
+# Iterate over every 100x100 region of the slide
 for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
     for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
         # point = Point(i+(50*ratio), j+(50*ratio))
