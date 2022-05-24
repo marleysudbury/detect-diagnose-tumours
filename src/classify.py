@@ -286,85 +286,98 @@ def main():
         if config['patch'] == "True":
             list_of_files = [
                 "22070",
-                "22071",
-                "22081",
-                "22082",
-                "22083",
-                "22111",
-                "22112",
-                "22113",
-                "22114",
-                "22158"
+                # "22071",
+                # "22081",
+                # "22082",
+                # "22083",
+                # # "22111",
+                # "22112",
+                # "22113",
+                # "22114",
+                # "22158"
             ]
+            # list_of_models = [
+            #     "beta_p",
+            #     "beta_p_a",
+            #     "beta_p_n",
+            #     "beta_p_a_n"
+            # ]
             list_of_models = [
-                "beta_p",
-                "beta_p_a",
-                "beta_p_n",
-                "beta_p_a_n"
+                # "beta_p_1-4",
+                "beta_p_a_1-4",
+                "beta_p_n_1-4",
+                "beta_p_a_n_1-4"
             ]
+
             for model_name in list_of_models:
                 checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
                 model.load_weights(checkpoint_path)
-                for normal in [False, True]:
+                for normal in [False]:
                     global normalise
                     normalise = normal
-                    normal_name = "no normal"
+                    normal_name = "no_normal"
                     if normal:
                         normal_name = "normal"
                     for file_name in list_of_files:
-                        slide = openslide.OpenSlide(
-                            # "E:\\Data\\Positive\\22113.svs")
-                            "G:\\Data\\Positive\\{}.svs".format(file_name))
-
-                        # print(slide.dimensions)
-                        # print(slide.level_dimensions)
-                        # mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
-                        # pixel_map = mask.load()
-                        # # Iterate over the center point of every 100x100 region of the slide
-                        # for i in range(0, slide.dimensions[0]-99, 100):
-                        #     for j in range(0, slide.dimensions[1]-99, 100):
-                        #         tile = slide.read_region(
-                        #             (i, j), 0, (100, 100)).convert("RGB")
-                        #         color = classify_array(tile)
-                        #         pixel_map[i//100, j//100] = color
-                        #     mask.save("mask.png")
-                        # mask.show()
-                        layer = 1  # 1/4 in H&N Data
-                        # layer = 4  # 1/16 in Cam16 Data
-                        mask = Image.new(mode="RGB", size=(
-                            slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
-                        pixel_map = mask.load()
-                        ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
-                        # Iterate over the center point of every 100x100 region of the slide
-                        for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
-                            for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
-                                tile = slide.read_region(
-                                    (i, j), layer, (100, 100)).convert("RGB")
-                                # Check if patch is background (Section 4.3)
-                                min_r = 255
-                                min_g = 255
-                                min_b = 255
-                                for x in range(0, tile.width):
-                                    for y in range(0, tile.height):
-                                        pixel = tile.getpixel((x, y))
-                                        if pixel[0] < min_r:
-                                            min_r = pixel[0]
-                                        if pixel[1] < min_g:
-                                            min_g = pixel[1]
-                                        if pixel[2] < min_b:
-                                            min_b = pixel[2]
-                                threshold = 200
-                                if min_r >= threshold and min_g >= threshold and min_b >= threshold:
-                                    color = (0, 0, 0)
-                                else:
-                                    color = classify_array(tile)
-                                pixel_map[i // (100 * ratio), j //
-                                          (100 * ratio)] = color
-                            mask.save("E:\\fyp\\predictions\\{}\\{}\\{}.png".format(
-                                model_name, normal_name, file_name))
-                            print("Column {}/{} complete".format(i // (100 * ratio) + 1,
-                                                                 slide.level_dimensions[layer][0] // 100))
-                        # mask.show()
+                        try:
+                            slide = openslide.OpenSlide(
+                                # "E:\\Data\\Positive\\22113.svs")
+                                "G:\\Data\\Positive\\{}.svs".format(file_name))
+                            # print(slide.dimensions)
+                            # print(slide.level_dimensions)
+                            # mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
+                            # pixel_map = mask.load()
+                            # # Iterate over the center point of every 100x100 region of the slide
+                            # for i in range(0, slide.dimensions[0]-99, 100):
+                            #     for j in range(0, slide.dimensions[1]-99, 100):
+                            #         tile = slide.read_region(
+                            #             (i, j), 0, (100, 100)).convert("RGB")
+                            #         color = classify_array(tile)
+                            #         pixel_map[i//100, j//100] = color
+                            #     mask.save("mask.png")
+                            # mask.show()
+                            layer = 1  # 1/4 in H&N Data
+                            # layer = 2  # 1/16 in H&N Data
+                            # layer = 4  # 1/16 in Cam16 Data
+                            mask = Image.new(mode="RGB", size=(
+                                slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
+                            pixel_map = mask.load()
+                            ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
+                            # Iterate over the center point of every 100x100 region of the slide
+                            for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
+                                for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
+                                    try:
+                                        tile = slide.read_region(
+                                            (i, j), layer, (100, 100)).convert("RGB")
+                                        # Check if patch is background (Section 4.3)
+                                        min_r = 255
+                                        min_g = 255
+                                        min_b = 255
+                                        for x in range(0, tile.width):
+                                            for y in range(0, tile.height):
+                                                pixel = tile.getpixel((x, y))
+                                                if pixel[0] < min_r:
+                                                    min_r = pixel[0]
+                                                if pixel[1] < min_g:
+                                                    min_g = pixel[1]
+                                                if pixel[2] < min_b:
+                                                    min_b = pixel[2]
+                                        threshold = 200
+                                        if min_r >= threshold and min_g >= threshold and min_b >= threshold:
+                                            color = (0, 0, 0)
+                                        else:
+                                            color = classify_array(tile)
+                                    except:
+                                        color = (0, 0, 0)
+                                    pixel_map[i // (100 * ratio), j //
+                                              (100 * ratio)] = color
+                                mask.save("E:\\fyp\\predictions\\{}\\{}\\{}.png".format(
+                                    model_name, normal_name, file_name))
+                                print("Column {}/{} complete".format(i // (100 * ratio) + 1,
+                                                                     slide.level_dimensions[layer][0] // 100))
+                            # mask.show()
+                        except:
+                            print("Unable to read slide due to OpenSlide issue")
         else:
             pipeline = ImagePipeline()
             pipeline.new_path(os.path.join(path.dir, path.file))

@@ -33,14 +33,14 @@ list_of_filenames = [
 #     "22081",
 #     "22082",
 #     "22083",
-#     "22111",
+#     # "22111",
 #     "22112",
 #     "22113",
 #     "22114",
 #     "22158"
 # ]
 
-model = "alpha_p_a_n"
+model = "alpha_p_n"
 # normal = "no normal"
 normal = "normal"
 

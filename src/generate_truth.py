@@ -12,55 +12,55 @@ from PIL import Image
 from shapely.geometry.polygon import Polygon
 import json
 
-list_of_filenames = [
-    "tumor_001",
-    "tumor_002",
-    "tumor_003",
-    "tumor_004",
-    "tumor_005",
-    "tumor_006",
-    "tumor_007",
-    "tumor_008",
-    "tumor_009",
-    "tumor_010"
-]
-
 # list_of_filenames = [
-#     "22070",
-#     "22071",
-#     "22081",
-#     "22082",
-#     "22083",
-#     "22111",
-#     "22112",
-#     "22113",
-#     "22114",
-#     "22158"
+#     "tumor_001",
+#     "tumor_002",
+#     "tumor_003",
+#     "tumor_004",
+#     "tumor_005",
+#     "tumor_006",
+#     "tumor_007",
+#     "tumor_008",
+#     "tumor_009",
+#     "tumor_010"
 # ]
+
+list_of_filenames = [
+    "22070",
+    "22071",
+    "22081",
+    "22082",
+    "22083",
+    # "22111",
+    "22112",
+    "22113",
+    "22114",
+    "22158"
+]
 
 for filename in list_of_filenames:
 
     # Location of the annotation
-    # input_name = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\Positive\\{}.geojson".format(
-    #     filename)
-    input_name = "E:\\fyp\\Training Data !\\Cam16Annotations\\GeoJSON\\{}.geojson".format(
+    input_name = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\Positive\\{}.geojson".format(
         filename)
+    # input_name = "E:\\fyp\\Training Data !\\Cam16Annotations\\GeoJSON\\{}.geojson".format(
+    # filename)
 
     # File that will be created
-    # output_name = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\PNG\\{}.png".format(
-    #     filename)
-    output_name = "E:\\fyp\\Training Data !\\Cam16Annotations\\PNG\\{}.png".format(
+    output_name = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\PNG\\{}.png".format(
         filename)
+    # output_name = "E:\\fyp\\Training Data !\\Cam16Annotations\\PNG\\{}.png".format(
+    #     filename)
 
     # The slide is required to get the dimensions
-    # slide_name = "G:\\Data\\Positive\\{}.svs".format(filename)
-    slide_name = "E:\\fyp\\Training Data !\\Cam16\\Training\\Tumor\\{}.tif".format(
-        filename)
+    slide_name = "G:\\Data\\Positive\\{}.svs".format(filename)
+    # slide_name = "E:\\fyp\\Training Data !\\Cam16\\Training\\Tumor\\{}.tif".format(
+    #     filename)
 
     # Open the slide
     slide = openslide.OpenSlide(slide_name)
 
-    layer = 4  # 1/16
+    layer = 2  # 1/16
 
     ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
 

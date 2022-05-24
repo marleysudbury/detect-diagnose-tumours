@@ -38,16 +38,17 @@ list_of_filenames = [
 ]
 
 for filename in list_of_filenames:
-    for normalise in [False, True]:
-        with open('D:\\fyp\\Training Data !\\Cam16_Annotations\\GeoJSON\\{}.geojson'.format(filename)) as f:
+    for normalise in [False]:
+        with open('E:\\fyp\\Training Data !\\Cam16Annotations\\GeoJSON\\{}.geojson'.format(filename)) as f:
             json_data = json.load(f)
         regions = []
         for region in json_data['features']:
             json_coords = region['geometry']['coordinates'][0]
             print(len(json_coords))
             if (len(json_coords) == 1):
-                 json_coords = json_coords[0]
-            polygon = Polygon([[float(item[0]),float(item[1])] for item in json_coords])
+                json_coords = json_coords[0]
+            polygon = Polygon([[float(item[0]), float(item[1])]
+                              for item in json_coords])
             name = region['properties']['classification']['name']
             regions.append([polygon, name])
 
@@ -63,54 +64,61 @@ for filename in list_of_filenames:
         }
 
         slide = openslide.OpenSlide(
-            "D:\\fyp\\Training Data !\\Cam16\\Training\\Tumor\\{}.tif".format(filename))
+            "E:\\fyp\\Training Data !\\Cam16\\Training\\Tumor\\{}.tif".format(filename))
 
         print(slide.dimensions)
 
-        layer = 2 # 1/4
+        layer = 4  # 1/16
         ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
 
         # Iterate over every 100x100 region of the slide to get all positive patches
         for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
             for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
-                patch_polygon = Polygon([[i, j], [i+100* ratio, j], [i+100* ratio, j+100* ratio], [i, j+100* ratio]])
+                patch_polygon = Polygon(
+                    [[i, j], [i + 100 * ratio, j], [i + 100 * ratio, j + 100 * ratio], [i, j + 100 * ratio]])
                 patch_class = "Negative"
                 for region in regions:
                     if patch_polygon.within(region[0]):
                         patch_class = "Positive"
 
                         try:
-                            tile = slide.read_region((i, j), layer, (100, 100)).convert("RGB")
+                            tile = slide.read_region(
+                                (i, j), layer, (100, 100)).convert("RGB")
                             if normalise:
-                                tile = np.transpose(np.array(tile), axes=[1,0,2])
+                                tile = np.transpose(
+                                    np.array(tile), axes=[1, 0, 2])
                                 tile = normalizeStaining(img=tile)[0]
-                                Image.fromarray(tile).save('D:\\fyp\\Training Data !\\Cam16PatchNormal\\Training\\Positive\\{}_{}_{}.png'.format(
+                                Image.fromarray(tile).save('E:\\fyp\\Training Data !\\Cam16PatchNormal_1-16\\Training\\Positive\\{}_{}_{}.png'.format(
                                     filename, i, j))
                             else:
-                                tile.save('D:\\fyp\\Training Data !\\Cam16Patch\\Training\\Positive\\{}_{}_{}.png'.format(
+                                tile.save('E:\\fyp\\Training Data !\\Cam16Patch_1-16\\Training\\Positive\\{}_{}_{}.png'.format(
                                     filename, i, j))
                             class_count[patch_class] += 1
                             print("This patch: {}. P:{}, N:{}".format(patch_class,
-                              class_count['Positive'], class_count['Negative']))
+                                                                      class_count['Positive'], class_count['Negative']))
                         except Exception as err:
                             print("An error occured while reading the region")
                             print("{}: {}".format(type(err).__name__, err))
 
         skip_slide = False
         # Iterate through patches until negative patches equal positive
-        for i in range(int((slide.level_dimensions[0][0] - 99 * ratio)/2), slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
-            for j in range(int((slide.level_dimensions[0][1] - 99 * ratio)/2), slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
+        for i in range(int((slide.level_dimensions[0][0] - 99 * ratio) / 2), slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
+            for j in range(int((slide.level_dimensions[0][1] - 99 * ratio) / 2), slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
+                if class_count["Negative"] >= class_count["Positive"]:
+                    skip_slide = True
                 if skip_slide:
                     break
                 patch_class = "Negative"
                 # Check if it is positive
-                patch_polygon = Polygon([[i, j], [i+100* ratio, j], [i+100* ratio, j+100* ratio], [i, j+100* ratio]])
+                patch_polygon = Polygon(
+                    [[i, j], [i + 100 * ratio, j], [i + 100 * ratio, j + 100 * ratio], [i, j + 100 * ratio]])
                 for region in regions:
                     if patch_polygon.within(region[0]):
                         patch_class = "Positive"
                 if patch_class == "Negative":
                     try:
-                        tile = slide.read_region((i, j), layer, (100, 100)).convert("RGB")
+                        tile = slide.read_region(
+                            (i, j), layer, (100, 100)).convert("RGB")
                         # Make sure it's not over the RGB threshold
                         # Check if patch is background (Section 4.3)
                         min_r = 255
@@ -131,18 +139,17 @@ for filename in list_of_filenames:
                             pass
                         else:
                             if normalise:
-                                tile = np.transpose(np.array(tile), axes=[1,0,2])
+                                tile = np.transpose(
+                                    np.array(tile), axes=[1, 0, 2])
                                 tile = normalizeStaining(img=tile)[0]
-                                Image.fromarray(tile).save('D:\\fyp\\Training Data !\\Cam16PatchNormal\\Training\\Negative\\{}_{}_{}.png'.format(
+                                Image.fromarray(tile).save('E:\\fyp\\Training Data !\\Cam16PatchNormal_1-16\\Training\\Negative\\{}_{}_{}.png'.format(
                                     filename, i, j))
                             else:
-                                tile.save('D:\\fyp\\Training Data !\\Cam16Patch\\Training\\Negative\\{}_{}_{}.png'.format(
+                                tile.save('E:\\fyp\\Training Data !\\Cam16Patch_1-16\\Training\\Negative\\{}_{}_{}.png'.format(
                                     filename, i, j))
                             class_count[patch_class] += 1
                             print("This patch: {}. P:{}, N:{}".format(patch_class,
-                              class_count['Positive'], class_count['Negative']))
-                            if class_count["Negative"] >= class_count["Positive"]:
-                                skip_slide = True
+                                                                      class_count['Positive'], class_count['Negative']))
                     except Exception as err:
                         print("An error occured while reading the region")
                         print("{}: {}".format(type(err).__name__, err))
