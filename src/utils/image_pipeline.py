@@ -12,17 +12,22 @@ import cv2
 import sys
 from .path_handler import PathHandler
 from .normalise_staining import normalizeStaining
+from PIL import Image
 
 # These files are required, they can be downloaded at:
 # https://github.com/libvips/libvips/releases
 # Change this for your install location and vips version, and remember to
 # use double backslashes
 from .load_config import config
-vipshome = config['libvips_path']
+# vipshome = config['libvips_path']
 
-# Include it in path PATH
-os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
-import pyvips
+# # Include it in path PATH
+# os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
+# import pyvips
+openslidehome = config['openslide_path']
+
+os.add_dll_directory(openslidehome)
+import openslide
 
 
 class ImagePipeline:
@@ -68,24 +73,26 @@ class ImagePipeline:
         }
 
         try:
-            img = pyvips.Image.tiffload(self.path, page=index)
+            img = openslide.OpenSlide(self.path).get_thumbnail((100, 100))
+            img.show()
+            # if image_height is None:
+            #     image_height = img.height
+            # if image_width is None:
+            #     image_width = img.width
 
-            if image_height is None:
-                image_height = img.height
-            if image_width is None:
-                image_width = img.width
-
-            img_array = np.ndarray(
-                buffer=img.write_to_memory(),
-                dtype=format_to_dtype[img.format],
-                shape=[img.height, img.width, img.bands]
-            )
+            # img_array = np.ndarray(
+            #     buffer=img.write_to_memory(),
+            #     dtype=format_to_dtype[img.format],
+            #     shape=[img.height, img.width, img.bands]
+            # )
 
             if square:
-                img_array = self.squarify(img_array, 255)
-            img_array = cv2.resize(img_array, dsize=(
+                img = self.squarify(np.asarray(img), 255)
+            img = cv2.resize(img, dsize=(
                 image_height, image_width), interpolation=cv2.INTER_NEAREST)
-            return img_array
+            img = Image.fromarray(img)
+            img.show()
+            return img
         except Exception as err:
             print("An error occured while reading the image")
             print("{}: {}".format(type(err).__name__, err))
@@ -150,10 +157,7 @@ if __name__ == "__main__":
                                     "Invalid argument for normalise. Please use Y or N. Running with default value of N.")
                             else:
                                 pass
-                        height, width, bands = array.shape
-                        linear = array.reshape(width * height * bands)
-                        image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                                             dtype_to_format[str(array.dtype)])
+                        image = Image.fromarray(array)
                         file_name = file.split(
                             os.path.sep)[-1].split(".")[0] + ".png"
                         image.write_to_file(os.path.join(
@@ -177,11 +181,7 @@ if __name__ == "__main__":
                                 "Invalid argument for normalise. Please use Y or N. Running with default value of N.")
                         else:
                             pass
-                    height, width, bands = array.shape
-                    linear = array.reshape(width * height * bands)
-                    image = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                                         dtype_to_format[str(array.dtype)])
-                    # image = image.thumbnail_image(width, height=height, crop=True)
+                    image = Image.fromarray(array)
                     file_name = input_path.file_name.split(".")[0] + ".png"
                     image.write_to_file(os.path.join(
                         output_path.dir, file_name))

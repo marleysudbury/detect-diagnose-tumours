@@ -10,6 +10,7 @@ import sys
 
 class PathHandler:
     def __init__(self, provided_path):
+        self.provided_path = provided_path
         interpreted_path = os.path.split(provided_path)
         self.dir = None
         self.file_name = None
