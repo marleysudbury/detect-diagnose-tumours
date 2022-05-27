@@ -18,9 +18,15 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import pathlib
-batch_size = 6
+batch_size = 16
 img_height = 1000
 img_width = 1000
+
+# Use unified memory
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+config.gpu_options.per_process_gpu_memory_fraction = 2
+session = tf.compat.v1.Session(config=config)
 
 data_augmentation = keras.Sequential(
     [
@@ -36,14 +42,17 @@ data_augmentation = keras.Sequential(
 
 # Import my own modules
 
-
-path = PathHandler(sys.argv[1])
-pipeline = ImagePipeline()
+# from path_handler import PathHandler
+# from image_pipeline import ImagePipeline
+#
+# path = PathHandler(sys.argv[1])
+# pipeline = ImagePipeline()
 
 # data_dir = pathlib.Path('E:\\Training Data !\\Adam compressed')
-data_dir = pathlib.Path('/media/c1838838/REM3/Training Data !/Adam compressed')
+# data_dir = pathlib.Path('/media/c1838838/REM3/Training Data !/Head_Neck_Patch_1-16_Normalised')
+data_dir = pathlib.Path('/media/c1838838/diskAshur2/H_N_5000_1000px/')
 
-image_count = len(list(data_dir.glob('*/*.jpg')))
+image_count = len(list(data_dir.glob('*/*.png')))
 print(image_count)
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
@@ -92,7 +101,7 @@ model.summary()
 # Save the model so that it can be loaded later
 # Adapted from https://www.tensorflow.org/tutorials/keras/save_and_load
 
-checkpoint_path = "/media/c1838838/REM3/model_2_adam_1000/cp.ckpt"
+checkpoint_path = "/media/c1838838/REM3/fyp/models/new/WSI_1000_2/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 
 # Create a callback that saves the model's weights
