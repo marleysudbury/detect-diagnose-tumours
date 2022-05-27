@@ -2,7 +2,7 @@
 # (multi-page .tif or .svs files) and use them for training
 # or classification in Tensorflow
 
-# Written my Marley Sudbury (1838838)
+# Written by Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
 import os

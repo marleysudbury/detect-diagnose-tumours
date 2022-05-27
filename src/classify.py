@@ -1,7 +1,7 @@
 # Program to take input .svs or .tif and give classification
 # according to pretrained model
 
-# Written my Marley Sudbury (1838838)
+# Written by Marley Sudbury (1838838)
 # for CM3203 One Semester Individual Project
 
 # Instructions for use
@@ -12,36 +12,31 @@
 
 # Step 0. import libraries
 
-import numpy as np
-# np.random.seed(1337)
+import os
+from utils.load_config import config
+openslidehome = config['openslide_path']
+
+os.add_dll_directory(openslidehome)
+import openslide
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-import os
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+import numpy as np
 import pathlib
 import sys
-import math
+from utils.normalise_staining import normalizeStaining
 from utils.path_handler import PathHandler
-from utils.image_pipeline import ImagePipeline
-
-# These files are required, they can be downloaded at:
-# https://github.com/libvips/libvips/releases
-# Change this for your install location and vips version, and remember to
-# use double backslashes
-from utils.load_config import config
-vipshome = config['libvips_path']
-
-# Include it in path PATH
-os.environ['PATH'] = vipshome + os.pathsep + os.environ['PATH']
-import pyvips
+from PIL import Image
+# from utils.image_pipeline import ImagePipeline
 
 # For Grad-CAM visualisation
 # https://keras.io/examples/vision/grad_cam/
 
-image_index = 3
+image_index = 1
+normalise = True
 
 # Data structure to store data for evaluation
 classification_confidences = []
@@ -50,9 +45,6 @@ tp = 0
 fp = 0
 tn = 0
 fn = 0
-
-stain_normalisation = True
-
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -101,6 +93,37 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
     # For visualization purpose, we will also normalize the heatmap between 0 & 1
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
     return heatmap.numpy()
+
+
+def classify_array(array):
+    # Used to classify patch
+    # Takes an image and prints the classification and confidence
+    # Red is negative
+    # Green is positive
+    try:
+        class_names = ['Negative', 'Positive']
+        if normalise:
+            array = np.transpose(np.array(array), axes=[1, 0, 2])
+            array = normalizeStaining(img=array)[0]
+        img_array = tf.expand_dims(array, 0)  # Create a batch
+        predictions = model.predict(img_array)
+        score = tf.nn.softmax(predictions[0])
+
+        # print(
+        #     "This image most likely belongs to {} with a {:.2f} percent confidence."
+        #     .format(class_names[np.argmax(score)], 100 * np.max(score))
+        # )
+
+        # if class_names[np.argmax(score)] == "Positive":
+        #     return (int(score[0].numpy() * 100), int(score[1].numpy() * 100), 0)
+        # elif class_names[np.argmax(score)] == "Negative":
+        #     return (int(score[1].numpy() * 100), int(score[0].numpy() * 100), 0)
+
+        return (int(score[0].numpy() * 100), int(score[1].numpy() * 100), 0)
+    except Exception as err:
+        print("An error occured while normalising the region")
+        print("{}: {}".format(type(err).__name__, err))
+        return (0, 0, 0)
 
 
 def classify_image(pipeline, index):
@@ -301,7 +324,7 @@ def main():
     provided_path = sys.argv[1]
     path = PathHandler(provided_path)
 
-    pipeline = ImagePipeline()
+    # pipeline = ImagePipeline()
 
     # interpreted_path = os.path.split(provided_path)
     # print(interpreted_path)
@@ -315,6 +338,7 @@ def main():
         # classified within the folder
         # print("dir")
         # dir = os.path.join(interpreted_path[0], interpreted_path[1])
+        pipeline = ImagePipeline()
         classify_directory(pipeline, path)
     # if os.path.isfile(os.path.join(interpreted_path[0],interpreted_path[1])):
     elif path.file():
@@ -324,8 +348,105 @@ def main():
         # print("file")
         # dir = interpreted_path[0]
         # file = interpreted_path[1]
-        pipeline.new_path(os.path.join(path.dir, path.file))
-        classify_image(pipeline, image_index)
+        if config['patch'] == "True":
+            list_of_files = [
+                "22070",
+                # "22071",
+                # "22081",
+                # "22082",
+                # "22083",
+                # # "22111",
+                # "22112",
+                # "22113",
+                # "22114",
+                # "22158"
+            ]
+            # list_of_models = [
+            #     "beta_p",
+            #     "beta_p_a",
+            #     # "beta_p_n",
+            #     # "beta_p_a_n"
+            # ]
+            list_of_models = [
+                "beta_p_1-4",
+                "beta_p_a_1-4",
+                "beta_p_n_1-4",
+                "beta_p_a_n_1-4"
+            ]
+
+            for model_name in list_of_models:
+                checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
+                model.load_weights(checkpoint_path)
+                for normal in [True]:
+                    global normalise
+                    normalise = normal
+                    normal_name = "no_normal"
+                    if normal:
+                        normal_name = "normal"
+                    for file_name in list_of_files:
+                        try:
+                            slide = openslide.OpenSlide(
+                                # "E:\\Data\\Positive\\22113.svs")
+                                "G:\\Data\\Positive\\{}.svs".format(file_name))
+                            # print(slide.dimensions)
+                            # print(slide.level_dimensions)
+                            # mask = Image.new(mode = "RGB", size = (slide.dimensions[0]//100, slide.dimensions[1]//100))
+                            # pixel_map = mask.load()
+                            # # Iterate over the center point of every 100x100 region of the slide
+                            # for i in range(0, slide.dimensions[0]-99, 100):
+                            #     for j in range(0, slide.dimensions[1]-99, 100):
+                            #         tile = slide.read_region(
+                            #             (i, j), 0, (100, 100)).convert("RGB")
+                            #         color = classify_array(tile)
+                            #         pixel_map[i//100, j//100] = color
+                            #     mask.save("mask.png")
+                            # mask.show()
+                            layer = 1  # 1/4 in H&N Data
+                            # layer = 2  # 1/16 in H&N Data
+                            # layer = 4  # 1/16 in Cam16 Data
+                            mask = Image.new(mode="RGB", size=(
+                                slide.level_dimensions[layer][0] // 100, slide.level_dimensions[layer][1] // 100))
+                            pixel_map = mask.load()
+                            ratio = slide.level_dimensions[0][0] // slide.level_dimensions[layer][0]
+                            # Iterate over the center point of every 100x100 region of the slide
+                            for i in range(0, slide.level_dimensions[0][0] - 99 * ratio, 100 * ratio):
+                                for j in range(0, slide.level_dimensions[0][1] - 99 * ratio, 100 * ratio):
+                                    try:
+                                        tile = slide.read_region(
+                                            (i, j), layer, (100, 100)).convert("RGB")
+                                        # Check if patch is background (Section 4.3)
+                                        min_r = 255
+                                        min_g = 255
+                                        min_b = 255
+                                        for x in range(0, tile.width):
+                                            for y in range(0, tile.height):
+                                                pixel = tile.getpixel((x, y))
+                                                if pixel[0] < min_r:
+                                                    min_r = pixel[0]
+                                                if pixel[1] < min_g:
+                                                    min_g = pixel[1]
+                                                if pixel[2] < min_b:
+                                                    min_b = pixel[2]
+                                        threshold = 200
+                                        if min_r >= threshold and min_g >= threshold and min_b >= threshold:
+                                            color = (0, 0, 0)
+                                        else:
+                                            color = classify_array(tile)
+                                    except:
+                                        color = (0, 0, 0)
+                                    pixel_map[i // (100 * ratio), j //
+                                              (100 * ratio)] = color
+                                mask.save("E:\\fyp\\predictions\\{}\\{}\\{}.png".format(
+                                    model_name, normal_name, file_name))
+                                print("Column {}/{} complete".format(i // (100 * ratio) + 1,
+                                                                     slide.level_dimensions[layer][0] // 100))
+                            # mask.show()
+                        except:
+                            print("Unable to read slide due to OpenSlide issue")
+        else:
+            pipeline = ImagePipeline()
+            pipeline.new_path(os.path.join(path.dir, path.file))
+            classify_image(pipeline, image_index)
 
     # if os.path.isdir(interpreted_path[0]):
     #     # The head of the provided path is a folder
