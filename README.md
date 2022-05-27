@@ -15,4 +15,4 @@ This project used data from the Head and Neck 5000 study. More information about
 
 Additional data was used from the Camelyon16 challenge. More information about Camelyon16 can be found here: https://camelyon16.grand-challenge.org/ and the data set can be found here: https://camelyon17.grand-challenge.org/Data/
 
-This project used the imagescope_xml_utils code available here: https://github.com/One-sixth/imagescope_xml_utilss
+This project uses the stain normalisation code available here: https://github.com/schaugf/HEnorm_python/blob/master/normalizeStaining.py

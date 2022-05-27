@@ -25,6 +25,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import numpy as np
+import pathlib
 import sys
 from utils.normalise_staining import normalizeStaining
 from utils.path_handler import PathHandler
@@ -35,9 +36,15 @@ from PIL import Image
 # https://keras.io/examples/vision/grad_cam/
 
 image_index = 1
-
 normalise = True
 
+# Data structure to store data for evaluation
+classification_confidences = []
+actual_classification = "Positive"
+tp = 0
+fp = 0
+tn = 0
+fn = 0
 
 def get_img_array(img_path, size):
     # https://keras.io/examples/vision/grad_cam/
@@ -133,6 +140,8 @@ def classify_image(pipeline, index):
         # img_array = tf.image.resize(img_array, [img_height, img_width])
 
         img_array = pipeline.convert_image(index, img_height, img_width, True)
+        if stain_normalisation:
+            img_array = pipeline.normalise_image(img_array)[0]
         img_array = tf.expand_dims(img_array, 0)  # Create a batch
         class_names = ['Negative', 'Positive']
         predictions = model.predict(img_array)
@@ -142,7 +151,7 @@ def classify_image(pipeline, index):
             "This image most likely belongs to {} with a {:.2f} percent confidence."
             .format(class_names[np.argmax(score)], 100 * np.max(score))
         )
-        # return
+        return class_names[np.argmax(score)], 100 * np.max(score)
 
         model_builder = keras.applications.xception.Xception
         img_size = (img_height, img_width)
@@ -208,7 +217,57 @@ def classify_image(pipeline, index):
 def classify_directory(pipeline, path):
     for file in path.iterate_files():
         pipeline.new_path(file)
-        classify_image(pipeline, image_index)
+        try:
+            label, confidence = classify_image(pipeline, image_index)
+        except:
+            # label, confidence = classify_image(pipeline, 2)
+            print("Couldn't load image")
+
+        if label == "Negative":
+            confidence = 100 - confidence
+        classification_confidences.append(confidence / 100)
+    #     global tn, tp, fn, fp
+    #     if actual_classification == label:
+    #         if label == "Negative":
+    #             tn += 1
+    #         else:
+    #             tp += 1
+    #     else:
+    #         if label == "Negative":
+    #             fn += 1
+    #         else:
+    #             fp += 1
+    #
+    # print("At 0.5 threshold (default). TP: {}, FP: {}, TN: {}, FN: {}".format(
+    #     tp, fp, tn, fn))
+
+    step = 0.01
+    for i in np.arange(0.0, 1 + step, step):
+        tp = fp = tn = fn = 0
+        for con in classification_confidences:
+            if con <= i:
+                if actual_classification == "Negative":
+                    tn += 1
+                else:
+                    fn += 1
+            else:
+                if actual_classification == "Negative":
+                    fp += 1
+                else:
+                    tp += 1
+        print("At {} threshold. TP: {}, FP: {}, TN: {}, FN: {}".format(
+            i, tp, fp, tn, fn))
+
+    print(classification_confidences)
+
+    # AUC evaluation adapted from:
+    # https://www.tensorflow.org/api_docs/python/tf/keras/metrics/AUC
+
+    m = tf.keras.metrics.AUC(num_thresholds=100)
+    # correct = [1 for i in range(0, 100)]
+    correct = [0 for i in range(0, 100)]
+    m.update_state(correct, classification_confidences)
+    print(m.result().numpy())
 
 
 def main():
@@ -246,8 +305,14 @@ def main():
 
     model.summary()
 
-    # checkpoint_path = "E:/fyp/models/alpha_p_n/cp.ckpt"
-    # model.load_weights(checkpoint_path)
+    model_name = "beta_a_n"
+    print("Using model: {}".format(model_name))
+    checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
+    try:
+        model.load_weights(checkpoint_path)
+    except:
+        print("Model not loaded correctly")
+        exit()
 
     # Step 2. load the image to check
 
