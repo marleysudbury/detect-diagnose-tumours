@@ -299,11 +299,11 @@ def main():
             # list_of_models = [
             #     "beta_p",
             #     "beta_p_a",
-            #     "beta_p_n",
-            #     "beta_p_a_n"
+            #     # "beta_p_n",
+            #     # "beta_p_a_n"
             # ]
             list_of_models = [
-                # "beta_p_1-4",
+                "beta_p_1-4",
                 "beta_p_a_1-4",
                 "beta_p_n_1-4",
                 "beta_p_a_n_1-4"
@@ -312,7 +312,7 @@ def main():
             for model_name in list_of_models:
                 checkpoint_path = "E:/fyp/models/{}/cp.ckpt".format(model_name)
                 model.load_weights(checkpoint_path)
-                for normal in [False]:
+                for normal in [True]:
                     global normalise
                     normalise = normal
                     normal_name = "no_normal"

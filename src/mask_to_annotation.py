@@ -23,7 +23,8 @@ for y in range(0, MASK_IMAGE.height):
         # print(MASK_IMAGE.getpixel((x, y)))
         colour = MASK_IMAGE.getpixel((x, y))
         if x != 0 and y != 0:
-            if colour == (255, 0, 0):
+            # if colour == (255, 0, 0):
+            if colour[1] > 50:
                 # Red, i.e. positive tissue
                 # Test: add the four corners of the pixel as vertices of a polygon
                 polygon = {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[]]}, "properties": {

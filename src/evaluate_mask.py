@@ -14,50 +14,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-list_of_filenames = [
-    "tumor_001",
-    "tumor_002",
-    "tumor_003",
-    "tumor_004",
-    "tumor_005",
-    "tumor_006",
-    "tumor_007",
-    "tumor_008",
-    "tumor_009",
-    "tumor_010"
-]
-
 # list_of_filenames = [
-#     "22070",
-#     "22071",
-#     "22081",
-#     "22082",
-#     "22083",
-#     # "22111",
-#     "22112",
-#     "22113",
-#     "22114",
-#     "22158"
+#     "tumor_001",
+#     "tumor_002",
+#     "tumor_003",
+#     "tumor_004",
+#     "tumor_005",
+#     "tumor_006",
+#     "tumor_007",
+#     "tumor_008",
+#     "tumor_009",
+#     "tumor_010"
 # ]
 
-model = "alpha_p_n"
-# normal = "no normal"
-normal = "normal"
+list_of_filenames = [
+    "22070",
+    "22071",
+    "22081",
+    "22082",
+    "22083",
+    # "22111",
+    "22112",
+    "22113",
+    "22114",
+    "22158"
+]
+
+model = "beta_p_a_n"
+normal = "no normal"
+# normal = "normal"
 
 tp = 0
 fp = 0
 tn = 0
 fn = 0
+positive_missed_by_RGB_threshold = 0
+
 for filename in list_of_filenames:
     # Load the generated mask
     mask_path = "E:\\fyp\\predictions\\{}\\{}\\{}.png".format(
         model, normal, filename)
 
     # Load the ground truth mask
-    # truth_path = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\PNG\\{}.png".format(
-    #     filename)
-    truth_path = "E:\\fyp\\Training Data !\\Cam16Annotations\\PNG\\{}.png".format(
+    truth_path = "E:\\fyp\\Training Data !\\Head_Neck_Annotations\\PNG\\{}.png".format(
         filename)
+    # truth_path = "E:\\fyp\\Training Data !\\Cam16Annotations\\PNG\\{}.png".format(
+    #     filename)
 
     generated = Image.open(mask_path)
     generated_pixel_map = generated.load()
@@ -69,7 +71,6 @@ for filename in list_of_filenames:
         print("Mask mismatch!")
         exit()
 
-    positive_missed_by_RGB_threshold = 0
     confidences = []
     truth = []
 
